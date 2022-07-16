@@ -1,10 +1,10 @@
-#ifndef HY3D_WIN32_PLATFORM_H
-#define HY3D_WIN32_PLATFORM_H 1
+#if !defined(INCLUDE_WIN32_PLATFORM_H)
+#define INCLUDE_WIN32_PLATFORM_H
 
-#include "core.h"
-#include "windows_configed.h"
-#include "win32_resource.h"
-#include "engine_platform.h"
+#include "hy3d_windows.h"
+#include "resource.h"
+
+#include "defines.h"
 
 #define WIN32_WINDOW_Y_BORDER 39
 #define WIN32_WINDOW_X_BORDER 23
@@ -25,8 +25,8 @@ struct win32_engine_code
 {
 	HMODULE dll;
 	FILETIME writeTime;
-    
+
 	bool isValid;
 };
 
-#endif
+#endif // INCLUDE_WIN32_PLATFORM_H

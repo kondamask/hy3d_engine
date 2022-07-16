@@ -1,6 +1,6 @@
-#include <stdio.h>
+#include "core/logger.h"
 
 int main()
 {
-    printf("Hey!");
+	return 0;
 }
