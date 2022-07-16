@@ -29,7 +29,7 @@ SET LIBS=user32.lib gdi32.lib
 SET LINKER_FLAGS=-incremental:no -opt:ref %LIBS%
 
 REM BUILD WINDOWS RESOURCE
-rc /fo win32_hy3d.res /nologo %SRC%\win32\resource.rc
+rc /fo win32_hy3d.res /nologo %SRC%\platform\win32\resource.rc
 
 DEL *.pdb > NUL 2> NUL
 
