@@ -1,13 +1,14 @@
 #include "platform/platform.h"
 
+#if PLATFORM_WINDOWS
+
 namespace HY3D
 {
-#if PLATFORM_WINDOWS
-#include "hy3d_windows.h"
 #include "resource.h"
+#include "hy3d_windows.h"
 
-#define WIN32_WINDOW_Y_BORDER 39
 #define WIN32_WINDOW_X_BORDER 23
+#define WIN32_WINDOW_Y_BORDER 39
 
 	struct win32_platform_state
 	{
@@ -18,7 +19,7 @@ namespace HY3D
 		const char *name;
 	};
 
-	struct win32_engine_code
+	struct win32_dll
 	{
 		HMODULE dll;
 		FILETIME writeTime;
@@ -381,10 +382,6 @@ namespace HY3D
 		if (GetFullPathNameA(filepath, ArrayCount(fullFilePath), fullFilePath, 0) == 0)
 			return false; // Couldn't find file
 
-		if (writeTime->data)
-		{
-			delete writeTime->data;
-		}
 		writeTime->data = new FILETIME;
 		FILETIME *result = (FILETIME *)writeTime->data;
 		WIN32_FIND_DATA data = {};
@@ -449,6 +446,80 @@ namespace HY3D
 		size_t length = strlen(message);
 		LPDWORD number_written = 0;
 		WriteConsoleA(GetStdHandle(STD_ERROR_HANDLE), message, (DWORD)length, number_written, 0);
+	}
+
+	static_func bool PlatformLoadDynamicLibrary(const char *filepath, dynamic_library *libOut)
+	{
+		libOut->data = new win32_dll;
+		win32_dll *dll = (win32_dll *)libOut->data;
+
+		const char *dllPath = filepath;
+		char filepathNoExtension[MAX_PATH];
+
+		u32 filepathLength = (u32)strlen(filepath);
+		u32 pos = 0;
+		for (pos = 0; pos < filepathLength; pos++)
+		{
+			if (filepath[pos] != '.')
+			{
+				filepathNoExtension[pos] = filepath[pos];
+			}
+			else
+			{
+				filepathNoExtension[pos] = '\0';
+			}
+		}
+
+		char dllCopyPath[MAX_PATH];
+		sprintf(dllCopyPath, "%s_copy.dll\0", filepathNoExtension);
+
+		// NOTE:  We need to add a sleep in order to wait for the dll compilation.
+		Sleep(800);
+		char dllFullPath[MAX_PATH] = {};
+		if (GetFullPathNameA(dllPath, ArrayCount(dllFullPath), dllFullPath, 0) == 0)
+			return false;
+		char dllCopyFullPath[MAX_PATH] = {};
+		if (GetFullPathNameA(dllCopyPath, ArrayCount(dllCopyFullPath), dllCopyFullPath, 0) == 0)
+			return false;
+
+		if (!PlatformGetFileWriteTime(dllFullPath, (file_write_time *)&dll->writeTime))
+			return false;
+
+		if (CopyFileA(dllFullPath, dllCopyFullPath, FALSE))
+		{
+			dll->dll = LoadLibraryA(dllCopyFullPath);
+			if (dll->dll)
+			{
+				dll->isValid = true;
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	static_func void *PlatformGetDynamicLibraryFunction(dynamic_library *lib, const char *function)
+	{
+		win32_dll *dll = (win32_dll *)lib->data;
+		void *result = 0;
+		if (dll->dll)
+		{
+			result = GetProcAddress(dll->dll, function);
+			ASSERT_MSG(result, "Function not found in dll");
+		}
+		return result;
+	}
+
+	static_func bool PlatformUnloadDynamicLibrary(dynamic_library *lib)
+	{
+		win32_dll *dll = (win32_dll *)lib->data;
+		if (dll->dll)
+		{
+			FreeLibrary(dll->dll);
+			delete dll;
+			return true;
+		}
+		return false;
 	}
 
 #if 0
@@ -653,86 +724,6 @@ static_func KEYBOARD_BUTTON Win32TranslateKeyInput(VK_CODE code)
 	break;
 	}
 }
-
-static_func void Win32LoadEngineCode(win32_engine_code *engineCode, engine_platform *engine)
-{
-	// TODO: make this less explicit
-	char *sourceDLLPath = "build\\engine_platform.dll";
-	char *sourceDLLCopyPath = "build\\engine_platform_copy.dll";
-
-	// NOTE:  We need to add a sleep in order to wait for the dll compilation.
-	Sleep(800);
-	char sourceFullPath[MAX_PATH] = {};
-	if (GetFullPathNameA(sourceDLLPath, ArrayCount(sourceFullPath), sourceFullPath, 0) == 0)
-		return;
-	char sourceFullPathCopy[MAX_PATH] = {};
-	if (GetFullPathNameA(sourceDLLCopyPath, ArrayCount(sourceFullPathCopy), sourceFullPathCopy, 0) == 0)
-		return;
-
-	Win32GetWriteTime(sourceFullPath, (file_write_time *)&engineCode->writeTime);
-	CopyFileA(sourceFullPath, sourceFullPathCopy, FALSE);
-	engineCode->dll = LoadLibraryA(sourceFullPathCopy);
-	if (engineCode->dll)
-	{
-		engine->Initialize = (func_engine_initialize *)GetProcAddress(engineCode->dll, "EngineInitialize");
-		engine->UpdateAndRender = (func_engine_update_and_render *)GetProcAddress(engineCode->dll, "EngineUpdateAndRender");
-		engine->Destroy = (func_engine_destroy *)GetProcAddress(engineCode->dll, "EngineDestroy");
-		engineCode->isValid = engine->Initialize;
-	}
-	if (!engineCode->isValid)
-	{
-		engine->Initialize = EngineInitializeStub;
-		engine->UpdateAndRender = EngineUpdateAndRenderStub;
-		engine->Destroy = EngineDestroyStub;
-	}
-	DebugPrintFunctionResult(engineCode->isValid);
-}
-
-static_func void Win32UnloadEngineCode(win32_engine_code *engineCode, engine_platform *engine)
-{
-	if (engineCode->dll)
-	{
-		FreeLibrary(engineCode->dll);
-		engineCode->dll = 0;
-	}
-	engineCode->isValid = false;
-	engine->UpdateAndRender = EngineUpdateAndRenderStub;
-	engine->reloaded = true;
-}
-
-// #include <strsafe.h>
-// void ErrorExit(LPTSTR lpszFunction)
-// {
-// 	// Retrieve the system error message for the last-error code
-
-// 	LPVOID lpMsgBuf;
-// 	LPVOID lpDisplayBuf;
-// 	DWORD dw = GetLastError();
-
-// 	FormatMessage(
-// 		FORMAT_MESSAGE_ALLOCATE_BUFFER |
-// 			FORMAT_MESSAGE_FROM_SYSTEM |
-// 			FORMAT_MESSAGE_IGNORE_INSERTS,
-// 		NULL,
-// 		dw,
-// 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-// 		(LPTSTR)&lpMsgBuf,
-// 		0, NULL);
-
-// 	// Display the error message and exit the process
-
-// 	lpDisplayBuf = (LPVOID)LocalAlloc(LMEM_ZEROINIT,
-// 									  (lstrlen((LPCTSTR)lpMsgBuf) + lstrlen((LPCTSTR)lpszFunction) + 40) * sizeof(TCHAR));
-// 	StringCchPrintf((LPTSTR)lpDisplayBuf,
-// 					LocalSize(lpDisplayBuf) / sizeof(TCHAR),
-// 					TEXT("%s failed with error %d: %s"),
-// 					lpszFunction, dw, lpMsgBuf);
-// 	MessageBox(NULL, (LPCTSTR)lpDisplayBuf, TEXT("Error"), MB_OK);
-
-// 	LocalFree(lpMsgBuf);
-// 	LocalFree(lpDisplayBuf);
-// 	ExitProcess(dw);
-// }
 
 static_func bool Win32InitializeMemory(engine_platform *engine)
 {

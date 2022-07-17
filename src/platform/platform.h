@@ -37,5 +37,13 @@ namespace HY3D
 
 	static_func void PlatformPrint(const char *message, u8 colour);
 	static_func void PlatformPrintError(const char *message, u8 colour);
+
+	struct dynamic_library
+	{
+		void *data;
+	};
+	static_func bool PlatformLoadDynamicLibrary(const char *filepath, dynamic_library *libOut);
+	static_func void *PlatformGetDynamicLibraryFunction(dynamic_library *lib, const char *function);
+	static_func bool PlatformUnloadDynamicLibrary(dynamic_library *lib);
 }
 #endif // INCLUDE_PLATFORM_H

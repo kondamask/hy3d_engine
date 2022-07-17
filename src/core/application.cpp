@@ -2,6 +2,12 @@
 
 namespace HY3D
 {
+#if _DEBUG
+#define ENGINE_DLL "bin\\Debug\\engine.dll"
+#else
+#define ENGINE_DLL "bin\\Release\\engine.dll"
+#endif
+
 	static_func bool ApplicationInitialize(application_config *appInfo)
 	{
 		if (appState.isInitialized)
@@ -15,6 +21,24 @@ namespace HY3D
 			return false;
 		}
 
+		dynamic_library engineLibrary = {};
+		if (PlatformLoadDynamicLibrary(ENGINE_DLL, &engineLibrary))
+		{
+			appState.engine.Initialize = (pfnEngineInitialize)PlatformGetDynamicLibraryFunction(&engineLibrary, "EngineInitialize");
+			appState.engine.Update = (pfnEngineUpdate)PlatformGetDynamicLibraryFunction(&engineLibrary, "EngineUpdate");
+			appState.engine.Render = (pfnEngineRender)PlatformGetDynamicLibraryFunction(&engineLibrary, "EngineRender");
+			appState.engine.Terminate = (pfnEngineTerminate)PlatformGetDynamicLibraryFunction(&engineLibrary, "EngineTerminate");
+		}
+
+		else
+		{
+			appState.engine.Initialize = EngineInitializeSTUB;
+			appState.engine.Update = EngineUpdateSTUB;
+			appState.engine.Render = EngineRenderSTUB;
+			appState.engine.Terminate = EngineTerminateSTUB;
+		}
+		appState.engine.Initialize();
+
 		return true;
 	}
 
@@ -24,11 +48,12 @@ namespace HY3D
 		{
 			if (!appState.isSuspended)
 			{
-				// TODO: Update
-				// TODO: Render
+				appState.engine.Update();
+				appState.engine.Render();
 			}
 		}
 
+		appState.engine.Terminate();
 		PlatformTerminate(&appState.platformState);
 
 		return true;

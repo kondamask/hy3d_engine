@@ -2,6 +2,7 @@
 #define INCLUDE_APPLICATION_H
 
 #include "defines.h"
+#include "engine.h"
 #include "platform/platform.h"
 
 namespace HY3D
@@ -15,6 +16,7 @@ namespace HY3D
 
 	struct application_state
 	{
+		engine engine;
 		bool isInitialized;
 		bool isSuspended;
 		i32 width;
