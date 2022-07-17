@@ -39,7 +39,7 @@ static_func bool PlatformInitialize(platform_state *platformState, const char *a
 	windowClass.hInstance = state->instance;
 	windowClass.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
 	windowClass.hIcon = LoadIconA(windowClass.hInstance, MAKEINTRESOURCEA(IDI_MYAPP_ICON));
-	windowClass.hCursor = LoadCursor(0, IDC_ARROW);
+	windowClass.hCursor = LoadCursorA(0, IDC_ARROW);
 
 	if (!RegisterClassA(&windowClass))
 	{
@@ -110,10 +110,11 @@ static_func bool PlatformTerminate(platform_state *platformState)
 	}
 }
 
+// Windows Specific Messages
 static_func LRESULT CALLBACK Win32PlatformProcessMessages(HWND handle, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	// NOTE: This pointer doesn't need to be checked for null since it always gets a value
-	// before we need to process ather messages. On application start we get:
+	// NOTE: The *state pointer doesn't need to be checked for null since it always gets a value
+	// before we need to process other messages. On application start we get:
 	// 1st message: WM_GETMINMAXINFO
 	// 2nd message: WM_NCCREATE -> sets window pointer in the windows api
 	win32_platform_state *state = (win32_platform_state *)GetWindowLongPtr(handle, GWLP_USERDATA);
@@ -121,11 +122,19 @@ static_func LRESULT CALLBACK Win32PlatformProcessMessages(HWND handle, UINT mess
 	LRESULT result = 0;
 	switch (message)
 	{
+	case WM_ERASEBKGND:
+		return 1;
+	case WM_CLOSE:
+		UnregisterClassA(state->name, state->instance);
+		DestroyWindow(handle);
+		return false;
+		break;
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		break;
 	case WM_PAINT:
-	{
 		ValidateRect(handle, 0);
 		break;
-	}
 	case WM_GETMINMAXINFO:
 	{
 		LPMINMAXINFO lpMMI = (LPMINMAXINFO)lParam;
@@ -133,25 +142,9 @@ static_func LRESULT CALLBACK Win32PlatformProcessMessages(HWND handle, UINT mess
 		lpMMI->ptMinTrackSize.y = MIN_WINDOW_HEIGHT + WIN32_WINDOW_Y_BORDER;
 		break;
 	}
-	case WM_SIZE:
-	{
+	case WM_SIZE: // Handle this in the generic messages process
 		PostMessage(handle, WM_USER + 1, wParam, lParam);
 		break;
-	}
-	// case WM_EXITSIZEMOVE:
-	case WM_CLOSE:
-	{
-		UnregisterClassA(state->name, state->instance);
-		DestroyWindow(handle);
-		break;
-	}
-
-	case WM_DESTROY:
-	{
-		PostQuitMessage(0);
-		break;
-	}
-
 	case WM_NCCREATE:
 	{
 		CREATESTRUCT *pCreate = (CREATESTRUCT *)lParam;
@@ -161,155 +154,32 @@ static_func LRESULT CALLBACK Win32PlatformProcessMessages(HWND handle, UINT mess
 			// Set WinAPI-managed user data to store ptr to window class
 			SetWindowLongPtr(handle, GWLP_USERDATA, (LONG_PTR)(state_));
 		}
+		result = DefWindowProc(handle, message, wParam, lParam);
+		break;
 	}
-
-		// 	NOTE: KEYBOARD AND MOUSE EVENTS SHOULD NOT COME HERE!
-		// case WM_SYSKEYDOWN:
-		// case WM_KEYDOWN:
-		// case WM_SYSKEYUP:
-		// case WM_KEYUP:
-		// case WM_LBUTTONDOWN:
-		// case WM_RBUTTONDOWN:
-		// case WM_LBUTTONUP:
-		// case WM_RBUTTONUP:
-		// case WM_MOUSEWHEEL:
-		// case WM_MOUSELEAVE:
-		// case WM_KILLFOCUS:
-
 	default:
 		result = DefWindowProc(handle, message, wParam, lParam);
 	}
 	return result;
 }
 
-static_func read_file_result PlatformReadFile(const char *filepath)
-{
-	read_file_result result = {};
-
-	char fullFilePath[MAX_PATH] = {};
-	if (GetFullPathNameA(filepath, ArrayCount(fullFilePath), fullFilePath, 0) == 0)
-		return result;
-
-	HANDLE fileHandle = CreateFileA(fullFilePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
-	if (fileHandle != INVALID_HANDLE_VALUE)
-	{
-		LARGE_INTEGER fileSize;
-		if (GetFileSizeEx(fileHandle, &fileSize))
-		{ // Truncate 64 bit value to 32 bit because VirtualAlloc only takes 32bit value
-			ASSERT(fileSize.QuadPart <= 0xFFFFFFFF);
-			result.size = (u32)fileSize.QuadPart;
-
-			result.content = VirtualAlloc(0, result.size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-			if (result.content)
-			{
-				DWORD bytesRead;
-				if (ReadFile(fileHandle, result.content, result.size, &bytesRead, 0) &&
-					result.size == bytesRead)
-				{
-					// We read the file successfully
-				}
-				else
-				{
-					PlatformFreeFileMemory(result.content);
-					result = {};
-				}
-			}
-		}
-		CloseHandle(fileHandle);
-	}
-	// NOTE:  We can add logging in case these steps fail.
-	return result;
-}
-
-static_func bool PlatformWriteFile(const char *filepath, u32 memorySize, void *memory)
-{
-	bool result = false;
-
-	char fullFilePath[MAX_PATH] = {};
-	if (GetFullPathNameA(filepath, ArrayCount(fullFilePath), fullFilePath, 0) == 0)
-		return result;
-
-	HANDLE fileHandle = CreateFileA(filepath, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
-	if (fileHandle != INVALID_HANDLE_VALUE)
-	{
-		DWORD bytesWritten;
-		if (WriteFile(fileHandle, memory, memorySize, &bytesWritten, 0))
-		{
-			// We wrote into the file successfully
-			result = (bytesWritten == memorySize);
-		}
-		CloseHandle(fileHandle);
-	}
-	// NOTE:  We can add logging in case these steps fail.
-	return result;
-}
-
-static_func void PlatformFreeFileMemory(void *memory)
-{
-	if (memory)
-	{
-		VirtualFree(memory, 0, MEM_RELEASE);
-	}
-}
-
-static_func bool PlatformGetFileWriteTime(const char *filepath, file_write_time *writeTime)
-{
-	char fullFilePath[MAX_PATH] = {};
-	if (GetFullPathNameA(filepath, ArrayCount(fullFilePath), fullFilePath, 0) == 0)
-		return false; // Couldn't find file
-
-	if (writeTime->data)
-	{
-		delete writeTime->data;
-	}
-	writeTime->data = new FILETIME;
-	FILETIME *result = (FILETIME *)writeTime->data;
-	WIN32_FIND_DATA data = {};
-	HANDLE handle = FindFirstFileA(fullFilePath, (LPWIN32_FIND_DATAA)&data);
-	if (handle != INVALID_HANDLE_VALUE)
-	{
-		*result = data.ftLastWriteTime;
-		FindClose(handle);
-	}
-	return true;
-}
-
-static_func bool PlatformWasFileUpdated(const char *filepath, file_write_time *writeTime)
-{
-	if (!writeTime->data)
-	{
-		return false;
-	}
-
-	file_write_time newWriteTime;
-	PlatformGetFileWriteTime(filepath, &newWriteTime);
-
-	FILETIME *win32newWriteTime = (FILETIME *)writeTime->data;
-	FILETIME *win32oldWriteTime = (FILETIME *)writeTime->data;
-	if (CompareFileTime(win32newWriteTime, win32oldWriteTime) == 1)
-	{
-		*win32oldWriteTime = *win32newWriteTime;
-		return true;
-	}
-	return false;
-}
-
+// General Use Messages
 static_func bool PlatformProcessMessages(platform_state *platformState)
 {
+	// win32_platform_state *state = (win32_platform_state *)platformState->data;
 	// engine_input &input = engine.input;
+
 	MSG message;
 	while (PeekMessage(&message, 0, 0, 0, PM_REMOVE))
 	{
-		// quitMessage = (i32)message.wParam;
-
 		switch (message.message)
 		{
+		// Order of messages when closing the window:
+		// WM_CLOSE   -> Unregister window class, destroy window handle
+		// WM_DESTROY -> Post Quit Message
+		// WM_QUIT    -> Return false and exit message loop
 		case WM_QUIT:
-		{
 			return false;
-			break;
-		}
-
 		// case WM_USER + 1: // WM_SIZE
 		// {
 		// 	engine.onResize = true;
@@ -434,6 +304,118 @@ static_func bool PlatformProcessMessages(platform_state *platformState)
 		}
 	}
 	return true;
+}
+
+static_func read_file_result PlatformReadFile(const char *filepath)
+{
+	read_file_result result = {};
+
+	char fullFilePath[MAX_PATH] = {};
+	if (GetFullPathNameA(filepath, ArrayCount(fullFilePath), fullFilePath, 0) == 0)
+		return result;
+
+	HANDLE fileHandle = CreateFileA(fullFilePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
+	if (fileHandle != INVALID_HANDLE_VALUE)
+	{
+		LARGE_INTEGER fileSize;
+		if (GetFileSizeEx(fileHandle, &fileSize))
+		{ // Truncate 64 bit value to 32 bit because VirtualAlloc only takes 32bit value
+			ASSERT(fileSize.QuadPart <= 0xFFFFFFFF);
+			result.size = (u32)fileSize.QuadPart;
+
+			result.content = VirtualAlloc(0, result.size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+			if (result.content)
+			{
+				DWORD bytesRead;
+				if (ReadFile(fileHandle, result.content, result.size, &bytesRead, 0) &&
+					result.size == bytesRead)
+				{
+					// We read the file successfully
+				}
+				else
+				{
+					PlatformFreeFileMemory(result.content);
+					result = {};
+				}
+			}
+		}
+		CloseHandle(fileHandle);
+	}
+	// NOTE:  We can add logging in case these steps fail.
+	return result;
+}
+
+static_func bool PlatformWriteFile(const char *filepath, u32 memorySize, void *memory)
+{
+	bool result = false;
+
+	char fullFilePath[MAX_PATH] = {};
+	if (GetFullPathNameA(filepath, ArrayCount(fullFilePath), fullFilePath, 0) == 0)
+		return result;
+
+	HANDLE fileHandle = CreateFileA(filepath, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+	if (fileHandle != INVALID_HANDLE_VALUE)
+	{
+		DWORD bytesWritten;
+		if (WriteFile(fileHandle, memory, memorySize, &bytesWritten, 0))
+		{
+			// We wrote into the file successfully
+			result = (bytesWritten == memorySize);
+		}
+		CloseHandle(fileHandle);
+	}
+	// NOTE:  We can add logging in case these steps fail.
+	return result;
+}
+
+static_func void PlatformFreeFileMemory(void *memory)
+{
+	if (memory)
+	{
+		VirtualFree(memory, 0, MEM_RELEASE);
+	}
+}
+
+static_func bool PlatformGetFileWriteTime(const char *filepath, file_write_time *writeTime)
+{
+	char fullFilePath[MAX_PATH] = {};
+	if (GetFullPathNameA(filepath, ArrayCount(fullFilePath), fullFilePath, 0) == 0)
+		return false; // Couldn't find file
+
+	if (writeTime->data)
+	{
+		delete writeTime->data;
+	}
+	writeTime->data = new FILETIME;
+	FILETIME *result = (FILETIME *)writeTime->data;
+	WIN32_FIND_DATA data = {};
+	HANDLE handle = FindFirstFileA(fullFilePath, (LPWIN32_FIND_DATAA)&data);
+	if (handle != INVALID_HANDLE_VALUE)
+	{
+		*result = data.ftLastWriteTime;
+		FindClose(handle);
+	}
+	return true;
+}
+
+static_func bool PlatformWasFileUpdated(const char *filepath, file_write_time *writeTime)
+{
+	if (!writeTime->data)
+	{
+		return false;
+	}
+
+	file_write_time newWriteTime;
+	PlatformGetFileWriteTime(filepath, &newWriteTime);
+
+	FILETIME *win32newWriteTime = (FILETIME *)writeTime->data;
+	FILETIME *win32oldWriteTime = (FILETIME *)writeTime->data;
+	if (CompareFileTime(win32newWriteTime, win32oldWriteTime) == 1)
+	{
+		*win32oldWriteTime = *win32newWriteTime;
+		return true;
+	}
+	return false;
 }
 
 static_func void Win32GetWindowDim(HWND handle, u32 &width, u32 &height)

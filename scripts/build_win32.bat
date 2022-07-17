@@ -2,50 +2,53 @@
 
 ctime -begin hy3d_engine_build_time.ctm
 
+REM Check if build mode is specified
 IF [%1] == [] (
 	echo Enter build mode: Debug or Release
 	echo Example: build Debug
 	goto :EOF
 )
 
+REM Set debug build options
 IF %1 == Debug (
-	SET MODE=-DHY3D_DEBUG=1 -DVULKAN_VALIDATION_LAYERS_ON=1 -Od
-    SET OUTPUT_PATH=.\bin\Debug
+	SET ModeFlags=-MTd -Od -Zi -Zo
+    SET OutputPath=.\bin\Debug
 	ECHO Building Debug
 )
+REM Set release build options
 IF %1 == Release (
-	SET MODE=-DHY3D_DEBUG=0 -DVULKAN_VALIDATION_LAYERS_ON=0 -O2
-    SET OUTPUT_PATH=.\bin\Release
+	SET ModeFlags=-O2
+    SET OutputPath=.\bin\Release
 	ECHO Building Release
 )
-IF NOT EXIST %OUTPUT_PATH% MKDIR %OUTPUT_PATH%
-PUSHD %OUTPUT_PATH%
+IF NOT EXIST %OutputPath% MKDIR %OutputPath%
+PUSHD %OutputPath%
 
 SET SRC=.\..\..\src
 
 REM COMPILER OPTIONS
-SET CL_FLAGS=-MTd -WL -nologo -fp:fast -fp:except- -Gm- -EHsc -Zo -Oi -FC -Zi -GS-
-SET DEFINES=-D_CRT_SECURE_NO_WARNINGS
-SET INCLUDES=/I %SRC%
-SET WARNINGS=-W4 -wd4100 -wd4458 -wd4505 -wd4201
-SET APP_NAME=hy3d_engine
-SET COMPILER_OPTIONS=%CL_FLAGS% %DEFINES% %INCLUDES% %WARNINGS% -Fe%APP_NAME%
+SET CFlags=-EHsc -FC -fp:except- -fp:fast -Gm- -GS- -nologo -Oi -WL %ModeFlags%
+SET Defines=-D_CRT_SECURE_NO_WARNINGS
+SET Includes=/I %SRC%
+SET Warnings=-W4 -wd4100 -wd4458 -wd4505 -wd4201
+SET AppName=hy3d_engine
+SET COptions=%CFlags% %Defines% %Includes% %Warnings% %MODE% -Fe%AppName%
 
 REM LINKER OPTIONS
-SET LINK_FLAGS=-incremental:no -opt:ref
-SET LIBRARIES=user32.lib gdi32.lib
-SET LINKER_OPTIONS=%LINK_FLAGS% %LIBRARIES%
+SET LFlags=-incremental:no -opt:ref
+SET Libraries=user32.lib gdi32.lib
+SET LOptions=%LFlags% %Libraries%
 
 DEL *.pdb > NUL 2> NUL
 
 REM BUILD WINDOWS RESOURCE
 REM rc /fo win32_hy3d.res /nologo %SRC%\platform\win32\resource.rc
-SET COMPILER_OPTIONS=%COMPILER_OPTIONS% win32_hy3d.res
+SET COptions=%COptions% win32_hy3d.res
 
 REM SET EXPOTED_FUNCS=-EXPORT:EngineInitialize -EXPORT:EngineUpdateAndRender -EXPORT:EngineDestroy
 REM cl /I %VULKAN_SDK%\Include %COMPILER_FLAGS% ..\src\engine_platform.cpp -Fmengine_platform.map -LD -link -incremental:no -opt:ref -PDB:engine_platform_%RANDOM%.pdb %EXPOTED_FUNCS%
 
-cl %COMPILER_OPTIONS% %SRC%\build.cpp -link %LINKER_OPTIONS%
+cl %COptions% %SRC%\build.cpp -link %LOptions%
 POPD
 
 ECHO ----------------------------------------------------------------------------
