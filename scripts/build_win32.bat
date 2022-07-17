@@ -1,5 +1,7 @@
 @echo off
 
+ctime -begin hy3d_engine_build_time.ctm
+
 IF [%1] == [] (
 	echo Enter build mode: Debug or Release
 	echo Example: build Debug
@@ -21,25 +23,33 @@ PUSHD %OUTPUT_PATH%
 
 SET SRC=.\..\..\src
 
-SET EXE_NAME=hy3d_engine
-SET INCLUDE_FOLDERS=/I %SRC%
+REM COMPILER OPTIONS
+SET CL_FLAGS=-MTd -WL -nologo -fp:fast -fp:except- -Gm- -EHsc -Zo -Oi -FC -Zi -GS-
+SET DEFINES=-D_CRT_SECURE_NO_WARNINGS
+SET INCLUDES=/I %SRC%
+SET WARNINGS=-W4 -wd4100 -wd4458 -wd4505 -wd4201
+SET APP_NAME=hy3d_engine
+SET COMPILER_OPTIONS=%CL_FLAGS% %DEFINES% %INCLUDES% %WARNINGS% -Fe%APP_NAME%
 
-SET COMPILER_FLAGS=%INCLUDE_FOLDERS% %MODE% -MTd -WL -nologo -fp:fast -fp:except- -Gm- -EHsc -Zo -Oi -W4 -wd4100 -wd4458 -wd4505 -wd4201 -FC -Zi -GS- -D_CRT_SECURE_NO_WARNINGS
-SET LIBS=user32.lib gdi32.lib 
-SET LINKER_FLAGS=-incremental:no -opt:ref %LIBS%
-
-REM BUILD WINDOWS RESOURCE
-rc /fo win32_hy3d.res /nologo %SRC%\platform\win32\resource.rc
+REM LINKER OPTIONS
+SET LINK_FLAGS=-incremental:no -opt:ref
+SET LIBRARIES=user32.lib gdi32.lib
+SET LINKER_OPTIONS=%LINK_FLAGS% %LIBRARIES%
 
 DEL *.pdb > NUL 2> NUL
+
+REM BUILD WINDOWS RESOURCE
+REM rc /fo win32_hy3d.res /nologo %SRC%\platform\win32\resource.rc
+SET COMPILER_OPTIONS=%COMPILER_OPTIONS% win32_hy3d.res
 
 REM SET EXPOTED_FUNCS=-EXPORT:EngineInitialize -EXPORT:EngineUpdateAndRender -EXPORT:EngineDestroy
 REM cl /I %VULKAN_SDK%\Include %COMPILER_FLAGS% ..\src\engine_platform.cpp -Fmengine_platform.map -LD -link -incremental:no -opt:ref -PDB:engine_platform_%RANDOM%.pdb %EXPOTED_FUNCS%
 
-cl %COMPILER_FLAGS% %SRC%\build.cpp  win32_hy3d.res -Fe%EXE_NAME% -link %LINKER_FLAGS%
+cl %COMPILER_OPTIONS% %SRC%\build.cpp -link %LINKER_OPTIONS%
 POPD
 
-ECHO .
-ECHO Done
+ECHO ----------------------------------------------------------------------------
 
 :EOF
+
+ctime -end hy3d_engine_build_time.ctm

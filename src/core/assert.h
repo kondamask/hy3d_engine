@@ -10,9 +10,9 @@
 #ifdef ASSERT_ENABLED
 #if _MSC_VER
 #include <intrin.h>
-#define DebugBreak() __debugbreak()
+#define HY3D_DebugBreak() __debugbreak()
 #else
-#define DebugBreak() __builtin_trap()
+#define HY3D_DebugBreak() __builtin_trap()
 #endif
 
 static_func void ReportAssertionFailure(const char *expression, const char *message, const char *file, i32 line);
@@ -25,7 +25,7 @@ static_func void ReportAssertionFailure(const char *expression, const char *mess
 		else                                                       \
 		{                                                          \
 			ReportAssertionFailure(#expr, "", __FILE__, __LINE__); \
-			DebugBreak();                                          \
+			HY3D_DebugBreak();                                     \
 		}                                                          \
 	}
 
@@ -37,7 +37,7 @@ static_func void ReportAssertionFailure(const char *expression, const char *mess
 		else                                                            \
 		{                                                               \
 			ReportAssertionFailure(#expr, message, __FILE__, __LINE__); \
-			DebugBreak();                                               \
+			HY3D_DebugBreak();                                          \
 		}                                                               \
 	}
 
@@ -50,7 +50,7 @@ static_func void ReportAssertionFailure(const char *expression, const char *mess
 		else                                                       \
 		{                                                          \
 			ReportAssertionFailure(#expr, "", __FILE__, __LINE__); \
-			DebugBreak();                                          \
+			HY3D_DebugBreak();                                     \
 		}                                                          \
 	}
 #else

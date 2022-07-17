@@ -163,21 +163,18 @@ static_func LRESULT CALLBACK Win32PlatformProcessMessages(HWND handle, UINT mess
 		}
 	}
 
-	// 	NOTE: KEYBOARD AND MOUSE EVENTS SHOULD NOT COME HERE!
-	case WM_SYSKEYDOWN:
-	case WM_KEYDOWN:
-	case WM_SYSKEYUP:
-	case WM_KEYUP:
-	case WM_LBUTTONDOWN:
-	case WM_RBUTTONDOWN:
-	case WM_LBUTTONUP:
-	case WM_RBUTTONUP:
-	case WM_MOUSEWHEEL:
-	case WM_MOUSELEAVE:
-	case WM_KILLFOCUS:
-	{
-		ASSERT_DEBUG("We got an input message from somewhere else and we did not handle it properly");
-	}
+		// 	NOTE: KEYBOARD AND MOUSE EVENTS SHOULD NOT COME HERE!
+		// case WM_SYSKEYDOWN:
+		// case WM_KEYDOWN:
+		// case WM_SYSKEYUP:
+		// case WM_KEYUP:
+		// case WM_LBUTTONDOWN:
+		// case WM_RBUTTONDOWN:
+		// case WM_LBUTTONUP:
+		// case WM_RBUTTONUP:
+		// case WM_MOUSEWHEEL:
+		// case WM_MOUSELEAVE:
+		// case WM_KILLFOCUS:
 
 	default:
 		result = DefWindowProc(handle, message, wParam, lParam);
@@ -268,7 +265,7 @@ static_func bool PlatformGetFileWriteTime(const char *filepath, file_write_time 
 	writeTime->data = new FILETIME;
 	FILETIME *result = (FILETIME *)writeTime->data;
 	WIN32_FIND_DATA data = {};
-	HANDLE handle = FindFirstFileA(fullFilePath, &data);
+	HANDLE handle = FindFirstFileA(fullFilePath, (LPWIN32_FIND_DATAA)&data);
 	if (handle != INVALID_HANDLE_VALUE)
 	{
 		*result = data.ftLastWriteTime;
@@ -307,11 +304,11 @@ static_func bool PlatformProcessMessages(platform_state *platformState)
 
 		switch (message.message)
 		{
-		// case WM_QUIT:
-		// {
-		// 	return false;
-		// 	break;
-		// }
+		case WM_QUIT:
+		{
+			return false;
+			break;
+		}
 
 		// case WM_USER + 1: // WM_SIZE
 		// {
