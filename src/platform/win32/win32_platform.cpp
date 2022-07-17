@@ -421,6 +421,32 @@ static_func void Win32GetWindowDim(HWND handle, u32 &width, u32 &height)
 	height = (u32)(rect.bottom - rect.top);
 }
 
+// Copied from: https://github.com/travisvroman/kohi/commit/ca0600eaefd11ed674c5a4642fb13ce17a96656f#diff-7f4ba46fd3ad1ae4558ae188a098f3a9d7009e1dbfc890e6562602f0f790e1e5
+static_func void PlatformPrint(const char *message, u8 colour)
+{
+	HANDLE console_handle = GetStdHandle(STD_OUTPUT_HANDLE);
+	// FATAL,ERROR,WARN,INFO,DEBUG,TRACE
+	static u8 levels[6] = {64, 4, 6, 2, 1, 8};
+	SetConsoleTextAttribute(console_handle, levels[colour]);
+	OutputDebugStringA(message);
+	size_t length = strlen(message);
+	LPDWORD number_written = 0;
+	WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), message, (DWORD)length, number_written, 0);
+}
+
+// Copied from: https://github.com/travisvroman/kohi/commit/ca0600eaefd11ed674c5a4642fb13ce17a96656f#diff-7f4ba46fd3ad1ae4558ae188a098f3a9d7009e1dbfc890e6562602f0f790e1e5
+static_func void PlatformPrintError(const char *message, u8 colour)
+{
+	HANDLE console_handle = GetStdHandle(STD_ERROR_HANDLE);
+	// FATAL,ERROR,WARN,INFO,DEBUG,TRACE
+	static u8 levels[6] = {64, 4, 6, 2, 1, 8};
+	SetConsoleTextAttribute(console_handle, levels[colour]);
+	OutputDebugStringA(message);
+	size_t length = strlen(message);
+	LPDWORD number_written = 0;
+	WriteConsoleA(GetStdHandle(STD_ERROR_HANDLE), message, (DWORD)length, number_written, 0);
+}
+
 #if 0
 static_func KEYBOARD_BUTTON Win32TranslateKeyInput(VK_CODE code)
 {

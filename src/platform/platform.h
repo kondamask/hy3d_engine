@@ -33,4 +33,7 @@ struct file_write_time
 static_func bool PlatformGetFileWriteTime(const char *filepath, file_write_time *writeTime);
 static_func bool PlatformWasFileUpdated(const char *filepath, file_write_time *writeTime);
 
+static_func void PlatformPrint(const char *message, u8 colour);
+static_func void PlatformPrintError(const char *message, u8 colour);
+
 #endif // INCLUDE_PLATFORM_H
