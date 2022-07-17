@@ -30,6 +30,7 @@ static_func bool PlatformInitialize(platform_state *platformState, const char *a
 	platformState->data = new win32_platform_state;
 	win32_platform_state *state = (win32_platform_state *)platformState->data;
 	state->instance = GetModuleHandleW(nullptr);
+	state->name = appName;
 
 	// Set window class properties
 	WNDCLASSA windowClass = {};
@@ -73,7 +74,7 @@ static_func bool PlatformInitialize(platform_state *platformState, const char *a
 		state->height,
 		0, 0,
 		state->instance,
-		&state // By passing this here, we can access it in Win32PlatformProcessMessages using GetWindowLongPtr
+		state // By passing this here, we can access it in Win32PlatformProcessMessages using GetWindowLongPtr
 	);
 
 	if (!state->handle)
@@ -117,21 +118,13 @@ static_func LRESULT CALLBACK Win32PlatformProcessMessages(HWND handle, UINT mess
 	// before we need to process other messages. On application start we get:
 	// 1st message: WM_GETMINMAXINFO
 	// 2nd message: WM_NCCREATE -> sets window pointer in the windows api
-	win32_platform_state *state = (win32_platform_state *)GetWindowLongPtr(handle, GWLP_USERDATA);
+	win32_platform_state *state = (win32_platform_state *)GetWindowLongPtrA(handle, GWLP_USERDATA);
 
 	LRESULT result = 0;
 	switch (message)
 	{
 	case WM_ERASEBKGND:
 		return 1;
-	case WM_CLOSE:
-		UnregisterClassA(state->name, state->instance);
-		DestroyWindow(handle);
-		return false;
-		break;
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		break;
 	case WM_PAINT:
 		ValidateRect(handle, 0);
 		break;
@@ -142,8 +135,14 @@ static_func LRESULT CALLBACK Win32PlatformProcessMessages(HWND handle, UINT mess
 		lpMMI->ptMinTrackSize.y = MIN_WINDOW_HEIGHT + WIN32_WINDOW_Y_BORDER;
 		break;
 	}
+	case WM_CLOSE:
+		UnregisterClassA(state->name, state->instance);
+		DestroyWindow(handle);
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		break;
 	case WM_SIZE: // Handle this in the generic messages process
-		PostMessage(handle, WM_USER + 1, wParam, lParam);
+		PostMessage(handle, WM_USER + 2, wParam, lParam);
 		break;
 	case WM_NCCREATE:
 	{
@@ -152,7 +151,7 @@ static_func LRESULT CALLBACK Win32PlatformProcessMessages(HWND handle, UINT mess
 		{
 			win32_platform_state *state_ = (win32_platform_state *)(pCreate->lpCreateParams);
 			// Set WinAPI-managed user data to store ptr to window class
-			SetWindowLongPtr(handle, GWLP_USERDATA, (LONG_PTR)(state_));
+			SetWindowLongPtrA(handle, GWLP_USERDATA, (LONG_PTR)(state_));
 		}
 		result = DefWindowProc(handle, message, wParam, lParam);
 		break;
@@ -166,7 +165,7 @@ static_func LRESULT CALLBACK Win32PlatformProcessMessages(HWND handle, UINT mess
 // General Use Messages
 static_func bool PlatformProcessMessages(platform_state *platformState)
 {
-	// win32_platform_state *state = (win32_platform_state *)platformState->data;
+	win32_platform_state *state = (win32_platform_state *)platformState->data;
 	// engine_input &input = engine.input;
 
 	MSG message;
@@ -180,100 +179,94 @@ static_func bool PlatformProcessMessages(platform_state *platformState)
 		// WM_QUIT    -> Return false and exit message loop
 		case WM_QUIT:
 			return false;
-		// case WM_USER + 1: // WM_SIZE
-		// {
-		// 	engine.onResize = true;
-		// 	Win32GetWindowDim(window.handle, engine.windowWidth, engine.windowHeight);
-		// 	window.width = engine.windowWidth;
-		// 	window.height = engine.windowHeight;
-		// 	break;
-		// }
+			// case WM_USER + 2: // WM_SIZE
+			// {
+			// 	engine.onResize = true;
+			// 	Win32GetWindowDim(window.handle, engine.windowWidth, engine.windowHeight);
+			// 	window.width = engine.windowWidth;
+			// 	window.height = engine.windowHeight;
+			// 	break;
+			// }
 
-		// //------------------------------------------------------------------------
-		// // KEYBOARD EVENTS
-		// //------------------------------------------------------------------------
-		// case WM_SYSKEYDOWN:
-		// case WM_KEYDOWN:
-		// {
-		// 	bool wasDown = ((message.lParam >> 30) & 1) != 0;
-		// 	if (!wasDown || input.keyboard.autoRepeatEnabled)
-		// 	{
-		// 		KEYBOARD_BUTTON key = Win32TranslateKeyInput((VK_CODE)message.wParam);
-		// 		if (key < KEY_COUNT)
-		// 			input.keyboard.ToggleKey(key);
-		// 	}
-		// 	if (input.keyboard.isPressed[KEY_F4] && input.keyboard.isPressed[KEY_ALT])
-		// 	{
-		// 		PostQuitMessage(0);
-		// 		return 0;
-		// 	}
-		// 	break;
-		// }
-		// case WM_SYSKEYUP:
-		// case WM_KEYUP:
-		// {
-		// 	KEYBOARD_BUTTON key = Win32TranslateKeyInput((VK_CODE)message.wParam);
-		// 	if (key < KEY_COUNT)
-		// 		input.keyboard.ToggleKey(key);
-		// 	break;
-		// }
+			// //------------------------------------------------------------------------
+			// // KEYBOARD EVENTS
+			// //------------------------------------------------------------------------
+			// case WM_SYSKEYDOWN:
+			// case WM_KEYDOWN:
+			// {
+			// 	bool wasDown = ((message.lParam >> 30) & 1) != 0;
+			// 	if (!wasDown || input.keyboard.autoRepeatEnabled)
+			// 	{
+			// 		KEYBOARD_BUTTON key = Win32TranslateKeyInput((VK_CODE)message.wParam);
+			// 		if (key < KEY_COUNT)
+			// 			input.keyboard.ToggleKey(key);
+			// 	}
+			// 	if (input.keyboard.isPressed[KEY_F4] && input.keyboard.isPressed[KEY_ALT])
+			// 	{
+			// 		PostQuitMessage(0);
+			// 		return 0;
+			// 	}
+			// 	break;
+			// }
+			// case WM_SYSKEYUP:
+			// case WM_KEYUP:
+			// {
+			// 	KEYBOARD_BUTTON key = Win32TranslateKeyInput((VK_CODE)message.wParam);
+			// 	if (key < KEY_COUNT)
+			// 		input.keyboard.ToggleKey(key);
+			// 	break;
+			// }
 
-		// //------------------------------------------------------------------------
-		// // MOUSE EVENTS
-		// //------------------------------------------------------------------------
-		// case WM_INPUT:
-		// {
-		// 	UINT dwSize = sizeof(RAWINPUT);
-		// 	local_var BYTE lpb[sizeof(RAWINPUT)];
-		// 	if (GetRawInputData((HRAWINPUT)message.lParam, RID_INPUT, lpb, &dwSize, sizeof(RAWINPUTHEADER)) == -1)
-		// 	{
-		// 		break;
-		// 	}
-
-		// 	RAWINPUT *raw = (RAWINPUT *)lpb;
-		// 	if (raw->header.dwType == RIM_TYPEMOUSE &&
-		// 		(raw->data.mouse.lLastX != 0 || raw->data.mouse.lLastY != 0))
-		// 	{
-		// 		input.mouse.newPos.X += (f32)raw->data.mouse.lLastX;
-		// 		input.mouse.newPos.Y += (f32)raw->data.mouse.lLastY;
-		// 	}
-		// 	break;
-		// }
-		// case WM_MOUSEMOVE:
-		// {
-		// 	POINTS p = MAKEPOINTS(message.lParam);
-		// 	p.y = (u16)window.height - p.y;
-		// 	bool isInWindow =
-		// 		p.x >= 0 && p.x < (u16)window.width &&
-		// 		p.y >= 0 && p.y < (u16)window.height;
-		// 	if (input.mouse.cursorEnabled)
-		// 	{
-		// 		while (ShowCursor(TRUE) < 0)
-		// 			;
-		// 		ClipCursor(0);
-		// 	}
-		// 	else
-		// 	{
-		// 		while (ShowCursor(FALSE) >= 0)
-		// 			;
-		// 		RECT rect;
-		// 		GetClientRect(window.handle, &rect);
-		// 		MapWindowPoints(window.handle, 0, (POINT *)(&rect), 2);
-		// 		ClipCursor(&rect);
-		// 	}
-		// 	if (isInWindow)
-		// 	{
-		// 		if (!input.mouse.isInWindow) // if it wasn't in the window before
-		// 		{
-		// 			SetCapture(window.handle);
-		// 			input.mouse.isInWindow = true;
-		// 		}
-		// 	}
-		// 	else
-		// 	{
-		// 		ReleaseCapture();
-		// 		input.mouse.isInWindow = false;
-		// 	}
+			// //------------------------------------------------------------------------
+			// // MOUSE EVENTS
+			// //------------------------------------------------------------------------
+			// case WM_INPUT:
+			// {
+			// 	UINT dwSize = sizeof(RAWINPUT);
+			// 	local_var BYTE lpb[sizeof(RAWINPUT)];
+			// 	if (GetRawInputData((HRAWINPUT)message.lParam, RID_INPUT, lpb, &dwSize, sizeof(RAWINPUTHEADER)) == -1)
+			// 	{
+			// 		break;
+			// 	}
+		case WM_MOUSEMOVE:
+		{
+			POINTS p = MAKEPOINTS(message.lParam);
+			p.y = 519 - p.y;
+			bool isInWindow =
+				p.x >= 0 && p.x < 656 &&
+				p.y >= 0 && p.y < 519;
+			if (true)
+			{
+				while (ShowCursor(TRUE) < 0)
+					;
+				ClipCursor(0);
+			}
+			else
+			{
+				while (ShowCursor(FALSE) >= 0)
+					;
+				RECT rect;
+				GetClientRect(state->handle, &rect);
+				MapWindowPoints(state->handle, 0, (POINT *)(&rect), 2);
+				ClipCursor(&rect);
+			}
+			if (isInWindow)
+			{
+				SetCapture(state->handle);
+			}
+			else
+			{
+				ReleaseCapture();
+			}
+			break;
+		}
+		// 	// RAWINPUT *raw = (RAWINPUT *)lpb;
+		// 	// if (raw->header.dwType == RIM_TYPEMOUSE &&
+		// 	// 	(raw->data.mouse.lLastX != 0 || raw->data.mouse.lLastY != 0))
+		// 	// {
+		// 	// 	input.mouse.newPos.X += (f32)raw->data.mouse.lLastX;
+		// 	// 	input.mouse.newPos.Y += (f32)raw->data.mouse.lLastY;
+		// 	// }
 		// 	break;
 		// }
 		// case WM_LBUTTONDOWN:
@@ -298,9 +291,11 @@ static_func bool PlatformProcessMessages(platform_state *platformState)
 		// 	input.keyboard.Clear();
 		// 	break;
 		default:
+		{
 			TranslateMessage(&message);
 			DispatchMessage(&message);
 			break;
+		}
 		}
 	}
 	return true;
@@ -427,20 +422,6 @@ static_func void Win32GetWindowDim(HWND handle, u32 &width, u32 &height)
 }
 
 #if 0
-int CALLBACK WinMain(
-	HINSTANCE instance,
-	HINSTANCE prevInstance,
-	LPSTR lpCmdLine,
-	int nShowCmd)
-{
-	if (!PlatformInitialize(window, 640, 480, window.name))
-	{
-		return 1;
-	}
-
-	return 0;
-}
-
 static_func KEYBOARD_BUTTON Win32TranslateKeyInput(VK_CODE code)
 {
 	switch (code)
