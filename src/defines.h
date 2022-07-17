@@ -1,4 +1,4 @@
-#if !defined(INCLUDE_DEFINES_H)
+#ifndef INCLUDE_DEFINES_H
 #define INCLUDE_DEFINES_H
 
 typedef char i8;

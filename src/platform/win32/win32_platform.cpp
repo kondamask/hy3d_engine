@@ -1,5 +1,7 @@
 #include "platform/platform.h"
 
+namespace HY3D
+{
 #if PLATFORM_WINDOWS
 #include "hy3d_windows.h"
 #include "resource.h"
@@ -7,445 +9,447 @@
 #define WIN32_WINDOW_Y_BORDER 39
 #define WIN32_WINDOW_X_BORDER 23
 
-struct win32_platform_state
-{
-	HWND handle;
-	HINSTANCE instance;
-	i32 width;
-	i32 height;
-	const char *name;
-};
-
-struct win32_engine_code
-{
-	HMODULE dll;
-	FILETIME writeTime;
-	bool isValid;
-};
-
-static_func LRESULT CALLBACK Win32PlatformProcessMessages(HWND handle, UINT message, WPARAM wParam, LPARAM lParam);
-
-static_func bool PlatformInitialize(platform_state *platformState, const char *appName, i32 width, i32 height)
-{
-	platformState->data = new win32_platform_state;
-	win32_platform_state *state = (win32_platform_state *)platformState->data;
-	state->instance = GetModuleHandleW(nullptr);
-	state->name = appName;
-
-	// Set window class properties
-	WNDCLASSA windowClass = {};
-	windowClass.style = CS_HREDRAW | CS_VREDRAW;
-	windowClass.lpfnWndProc = Win32PlatformProcessMessages;
-	windowClass.lpszClassName = appName;
-	windowClass.hInstance = state->instance;
-	windowClass.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
-	windowClass.hIcon = LoadIconA(windowClass.hInstance, MAKEINTRESOURCEA(IDI_MYAPP_ICON));
-	windowClass.hCursor = LoadCursorA(0, IDC_ARROW);
-
-	if (!RegisterClassA(&windowClass))
+	struct win32_platform_state
 	{
-		LOG_FATAL("RegisterClassA failed to register window class");
-		return false;
-	}
+		HWND handle;
+		HINSTANCE instance;
+		i32 width;
+		i32 height;
+		const char *name;
+	};
 
-	state->width = width;
-	state->height = height;
-	// Declare the window client size
-	RECT rect = {};
-	rect.left = 100;
-	rect.top = 100;
-	rect.right = rect.left + state->width;
-	rect.bottom = rect.top + state->height;
-
-	// Adjuct the window size according to the style we
-	// have for out window, while keeping the client size
-	// the same.
-	AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW | WS_VISIBLE, FALSE);
-	state->width = (i16)(rect.right - rect.left);
-	state->height = (i16)(rect.bottom - rect.top);
-
-	// Create the window
-	state->handle = CreateWindowA(
-		appName,
-		appName,
-		WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
-		CW_USEDEFAULT, CW_USEDEFAULT, // X, Y
-		state->width,
-		state->height,
-		0, 0,
-		state->instance,
-		state // By passing this here, we can access it in Win32PlatformProcessMessages using GetWindowLongPtr
-	);
-
-	if (!state->handle)
+	struct win32_engine_code
 	{
-		LOG_FATAL("CreateWindowA failed to create a handle.");
-		return false;
-	}
+		HMODULE dll;
+		FILETIME writeTime;
+		bool isValid;
+	};
 
-	RAWINPUTDEVICE rid;
-	rid.usUsagePage = 0x01; // HID_USAGE_PAGE_GENERIC;
-	rid.usUsage = 0x02;		// HID_USAGE_GENERIC_MOUSE;
-	rid.dwFlags = 0x100;	// RIDEV_INPUTSINK;
-	rid.hwndTarget = state->handle;
-	if (!RegisterRawInputDevices(&rid, 1, sizeof(rid)))
+	static_func LRESULT CALLBACK Win32PlatformProcessMessages(HWND handle, UINT message, WPARAM wParam, LPARAM lParam);
+
+	static_func bool PlatformInitialize(platform_state *platformState, const char *appName, i32 width, i32 height)
 	{
-		LOG_FATAL("RegisterRawInputDevices failed");
-		return false;
-	}
+		platformState->data = new win32_platform_state;
+		win32_platform_state *state = (win32_platform_state *)platformState->data;
+		state->instance = GetModuleHandleW(nullptr);
+		state->name = appName;
 
-	ShowWindow(state->handle, SW_SHOWDEFAULT);
-	SetFocus(state->handle);
-	SetCapture(state->handle);
-	return true;
-}
+		// Set window class properties
+		WNDCLASSA windowClass = {};
+		windowClass.style = CS_HREDRAW | CS_VREDRAW;
+		windowClass.lpfnWndProc = Win32PlatformProcessMessages;
+		windowClass.lpszClassName = appName;
+		windowClass.hInstance = state->instance;
+		windowClass.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
+		windowClass.hIcon = LoadIconA(windowClass.hInstance, MAKEINTRESOURCEA(IDI_MYAPP_ICON));
+		windowClass.hCursor = LoadCursorA(0, IDC_ARROW);
 
-static_func bool PlatformTerminate(platform_state *platformState)
-{
-	win32_platform_state *state = (win32_platform_state *)platformState->data;
-
-	if (state->handle)
-	{
-		DestroyWindow(state->handle);
-		state->handle = 0;
-	}
-}
-
-// Windows Specific Messages
-static_func LRESULT CALLBACK Win32PlatformProcessMessages(HWND handle, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	// NOTE: The *state pointer doesn't need to be checked for null since it always gets a value
-	// before we need to process other messages. On application start we get:
-	// 1st message: WM_GETMINMAXINFO
-	// 2nd message: WM_NCCREATE -> sets window pointer in the windows api
-	win32_platform_state *state = (win32_platform_state *)GetWindowLongPtrA(handle, GWLP_USERDATA);
-
-	LRESULT result = 0;
-	switch (message)
-	{
-	case WM_ERASEBKGND:
-		return 1;
-	case WM_PAINT:
-		ValidateRect(handle, 0);
-		break;
-	case WM_GETMINMAXINFO:
-	{
-		LPMINMAXINFO lpMMI = (LPMINMAXINFO)lParam;
-		lpMMI->ptMinTrackSize.x = MIN_WINDOW_WIDTH + WIN32_WINDOW_X_BORDER;
-		lpMMI->ptMinTrackSize.y = MIN_WINDOW_HEIGHT + WIN32_WINDOW_Y_BORDER;
-		break;
-	}
-	case WM_CLOSE:
-		UnregisterClassA(state->name, state->instance);
-		DestroyWindow(handle);
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		break;
-	case WM_SIZE: // Handle this in the generic messages process
-		PostMessage(handle, WM_USER + 2, wParam, lParam);
-		break;
-	case WM_NCCREATE:
-	{
-		CREATESTRUCT *pCreate = (CREATESTRUCT *)lParam;
-		if (pCreate)
+		if (!RegisterClassA(&windowClass))
 		{
-			win32_platform_state *state_ = (win32_platform_state *)(pCreate->lpCreateParams);
-			// Set WinAPI-managed user data to store ptr to window class
-			SetWindowLongPtrA(handle, GWLP_USERDATA, (LONG_PTR)(state_));
-		}
-		result = DefWindowProc(handle, message, wParam, lParam);
-		break;
-	}
-	default:
-		result = DefWindowProc(handle, message, wParam, lParam);
-	}
-	return result;
-}
-
-// General Use Messages
-static_func bool PlatformProcessMessages(platform_state *platformState)
-{
-	win32_platform_state *state = (win32_platform_state *)platformState->data;
-	// engine_input &input = engine.input;
-
-	MSG message;
-	while (PeekMessage(&message, 0, 0, 0, PM_REMOVE))
-	{
-		switch (message.message)
-		{
-		// Order of messages when closing the window:
-		// WM_CLOSE   -> Unregister window class, destroy window handle
-		// WM_DESTROY -> Post Quit Message
-		// WM_QUIT    -> Return false and exit message loop
-		case WM_QUIT:
+			LOG_FATAL("RegisterClassA failed to register window class");
 			return false;
-			// case WM_USER + 2: // WM_SIZE
-			// {
-			// 	engine.onResize = true;
-			// 	Win32GetWindowDim(window.handle, engine.windowWidth, engine.windowHeight);
-			// 	window.width = engine.windowWidth;
-			// 	window.height = engine.windowHeight;
-			// 	break;
-			// }
+		}
 
-			// //------------------------------------------------------------------------
-			// // KEYBOARD EVENTS
-			// //------------------------------------------------------------------------
-			// case WM_SYSKEYDOWN:
-			// case WM_KEYDOWN:
-			// {
-			// 	bool wasDown = ((message.lParam >> 30) & 1) != 0;
-			// 	if (!wasDown || input.keyboard.autoRepeatEnabled)
-			// 	{
-			// 		KEYBOARD_BUTTON key = Win32TranslateKeyInput((VK_CODE)message.wParam);
-			// 		if (key < KEY_COUNT)
-			// 			input.keyboard.ToggleKey(key);
-			// 	}
-			// 	if (input.keyboard.isPressed[KEY_F4] && input.keyboard.isPressed[KEY_ALT])
-			// 	{
-			// 		PostQuitMessage(0);
-			// 		return 0;
-			// 	}
-			// 	break;
-			// }
-			// case WM_SYSKEYUP:
-			// case WM_KEYUP:
-			// {
-			// 	KEYBOARD_BUTTON key = Win32TranslateKeyInput((VK_CODE)message.wParam);
-			// 	if (key < KEY_COUNT)
-			// 		input.keyboard.ToggleKey(key);
-			// 	break;
-			// }
+		state->width = width;
+		state->height = height;
+		// Declare the window client size
+		RECT rect = {};
+		rect.left = 100;
+		rect.top = 100;
+		rect.right = rect.left + state->width;
+		rect.bottom = rect.top + state->height;
 
-			// //------------------------------------------------------------------------
-			// // MOUSE EVENTS
-			// //------------------------------------------------------------------------
-			// case WM_INPUT:
-			// {
-			// 	UINT dwSize = sizeof(RAWINPUT);
-			// 	local_var BYTE lpb[sizeof(RAWINPUT)];
-			// 	if (GetRawInputData((HRAWINPUT)message.lParam, RID_INPUT, lpb, &dwSize, sizeof(RAWINPUTHEADER)) == -1)
-			// 	{
-			// 		break;
-			// 	}
-		case WM_MOUSEMOVE:
+		// Adjuct the window size according to the style we
+		// have for out window, while keeping the client size
+		// the same.
+		AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW | WS_VISIBLE, FALSE);
+		state->width = (i16)(rect.right - rect.left);
+		state->height = (i16)(rect.bottom - rect.top);
+
+		// Create the window
+		state->handle = CreateWindowA(
+			appName,
+			appName,
+			WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
+			CW_USEDEFAULT, CW_USEDEFAULT, // X, Y
+			state->width,
+			state->height,
+			0, 0,
+			state->instance,
+			state // By passing this here, we can access it in Win32PlatformProcessMessages using GetWindowLongPtr
+		);
+
+		if (!state->handle)
 		{
-			POINTS p = MAKEPOINTS(message.lParam);
-			p.y = 519 - p.y;
-			bool isInWindow =
-				p.x >= 0 && p.x < 656 &&
-				p.y >= 0 && p.y < 519;
-			if (true)
-			{
-				while (ShowCursor(TRUE) < 0)
-					;
-				ClipCursor(0);
-			}
-			else
-			{
-				while (ShowCursor(FALSE) >= 0)
-					;
-				RECT rect;
-				GetClientRect(state->handle, &rect);
-				MapWindowPoints(state->handle, 0, (POINT *)(&rect), 2);
-				ClipCursor(&rect);
-			}
-			if (isInWindow)
-			{
-				SetCapture(state->handle);
-			}
-			else
-			{
-				ReleaseCapture();
-			}
-			break;
+			LOG_FATAL("CreateWindowA failed to create a handle.");
+			return false;
 		}
-		// 	// RAWINPUT *raw = (RAWINPUT *)lpb;
-		// 	// if (raw->header.dwType == RIM_TYPEMOUSE &&
-		// 	// 	(raw->data.mouse.lLastX != 0 || raw->data.mouse.lLastY != 0))
-		// 	// {
-		// 	// 	input.mouse.newPos.X += (f32)raw->data.mouse.lLastX;
-		// 	// 	input.mouse.newPos.Y += (f32)raw->data.mouse.lLastY;
-		// 	// }
-		// 	break;
-		// }
-		// case WM_LBUTTONDOWN:
-		// 	input.mouse.leftIsPressed = true;
-		// 	break;
-		// case WM_RBUTTONDOWN:
-		// 	input.mouse.rightIsPressed = true;
-		// 	break;
-		// case WM_LBUTTONUP:
-		// 	input.mouse.leftIsPressed = false;
-		// 	break;
-		// case WM_RBUTTONUP:
-		// 	input.mouse.rightIsPressed = false;
-		// 	break;
-		// case WM_MOUSEWHEEL:
-		// 	input.mouse.UpdateWheelDelta(GET_WHEEL_DELTA_WPARAM(message.wParam));
-		// case WM_MOUSELEAVE:
-		// 	POINTS p = MAKEPOINTS(message.lParam);
-		// 	input.mouse.isInWindow = false;
-		// 	break;
-		// case WM_KILLFOCUS:
-		// 	input.keyboard.Clear();
-		// 	break;
-		default:
+
+		RAWINPUTDEVICE rid;
+		rid.usUsagePage = 0x01; // HID_USAGE_PAGE_GENERIC;
+		rid.usUsage = 0x02;		// HID_USAGE_GENERIC_MOUSE;
+		rid.dwFlags = 0x100;	// RIDEV_INPUTSINK;
+		rid.hwndTarget = state->handle;
+		if (!RegisterRawInputDevices(&rid, 1, sizeof(rid)))
 		{
-			TranslateMessage(&message);
-			DispatchMessage(&message);
-			break;
+			LOG_FATAL("RegisterRawInputDevices failed");
+			return false;
 		}
-		}
+
+		ShowWindow(state->handle, SW_SHOWDEFAULT);
+		SetFocus(state->handle);
+		SetCapture(state->handle);
+		return true;
 	}
-	return true;
-}
 
-static_func read_file_result PlatformReadFile(const char *filepath)
-{
-	read_file_result result = {};
-
-	char fullFilePath[MAX_PATH] = {};
-	if (GetFullPathNameA(filepath, ArrayCount(fullFilePath), fullFilePath, 0) == 0)
-		return result;
-
-	HANDLE fileHandle = CreateFileA(fullFilePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
-	if (fileHandle != INVALID_HANDLE_VALUE)
+	static_func bool PlatformTerminate(platform_state *platformState)
 	{
-		LARGE_INTEGER fileSize;
-		if (GetFileSizeEx(fileHandle, &fileSize))
-		{ // Truncate 64 bit value to 32 bit because VirtualAlloc only takes 32bit value
-			ASSERT(fileSize.QuadPart <= 0xFFFFFFFF);
-			result.size = (u32)fileSize.QuadPart;
+		win32_platform_state *state = (win32_platform_state *)platformState->data;
 
-			result.content = VirtualAlloc(0, result.size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-			if (result.content)
+		if (state->handle)
+		{
+			DestroyWindow(state->handle);
+			state->handle = 0;
+		}
+
+		return true;
+	}
+
+	// Windows Specific Messages
+	static_func LRESULT CALLBACK Win32PlatformProcessMessages(HWND handle, UINT message, WPARAM wParam, LPARAM lParam)
+	{
+		// NOTE: The *state pointer doesn't need to be checked for null since it always gets a value
+		// before we need to process other messages. On application start we get:
+		// 1st message: WM_GETMINMAXINFO
+		// 2nd message: WM_NCCREATE -> sets window pointer in the windows api
+		win32_platform_state *state = (win32_platform_state *)GetWindowLongPtrA(handle, GWLP_USERDATA);
+
+		LRESULT result = 0;
+		switch (message)
+		{
+		case WM_ERASEBKGND:
+			return 1;
+		case WM_PAINT:
+			ValidateRect(handle, 0);
+			break;
+		case WM_GETMINMAXINFO:
+		{
+			LPMINMAXINFO lpMMI = (LPMINMAXINFO)lParam;
+			lpMMI->ptMinTrackSize.x = MIN_WINDOW_WIDTH + WIN32_WINDOW_X_BORDER;
+			lpMMI->ptMinTrackSize.y = MIN_WINDOW_HEIGHT + WIN32_WINDOW_Y_BORDER;
+			break;
+		}
+		case WM_CLOSE:
+			UnregisterClassA(state->name, state->instance);
+			DestroyWindow(handle);
+		case WM_DESTROY:
+			PostQuitMessage(0);
+			break;
+		case WM_SIZE: // Handle this in the generic messages process
+			PostMessage(handle, WM_USER + 2, wParam, lParam);
+			break;
+		case WM_NCCREATE:
+		{
+			CREATESTRUCT *pCreate = (CREATESTRUCT *)lParam;
+			if (pCreate)
 			{
-				DWORD bytesRead;
-				if (ReadFile(fileHandle, result.content, result.size, &bytesRead, 0) &&
-					result.size == bytesRead)
+				win32_platform_state *state_ = (win32_platform_state *)(pCreate->lpCreateParams);
+				// Set WinAPI-managed user data to store ptr to window class
+				SetWindowLongPtrA(handle, GWLP_USERDATA, (LONG_PTR)(state_));
+			}
+			result = DefWindowProc(handle, message, wParam, lParam);
+			break;
+		}
+		default:
+			result = DefWindowProc(handle, message, wParam, lParam);
+		}
+		return result;
+	}
+
+	// General Use Messages
+	static_func bool PlatformProcessMessages(platform_state *platformState)
+	{
+		win32_platform_state *state = (win32_platform_state *)platformState->data;
+		// engine_input &input = engine.input;
+
+		MSG message;
+		while (PeekMessage(&message, 0, 0, 0, PM_REMOVE))
+		{
+			switch (message.message)
+			{
+			// Order of messages when closing the window:
+			// WM_CLOSE   -> Unregister window class, destroy window handle
+			// WM_DESTROY -> Post Quit Message
+			// WM_QUIT    -> Return false and exit message loop
+			case WM_QUIT:
+				return false;
+				// case WM_USER + 2: // WM_SIZE
+				// {
+				// 	engine.onResize = true;
+				// 	Win32GetWindowDim(window.handle, engine.windowWidth, engine.windowHeight);
+				// 	window.width = engine.windowWidth;
+				// 	window.height = engine.windowHeight;
+				// 	break;
+				// }
+
+				// //------------------------------------------------------------------------
+				// // KEYBOARD EVENTS
+				// //------------------------------------------------------------------------
+				// case WM_SYSKEYDOWN:
+				// case WM_KEYDOWN:
+				// {
+				// 	bool wasDown = ((message.lParam >> 30) & 1) != 0;
+				// 	if (!wasDown || input.keyboard.autoRepeatEnabled)
+				// 	{
+				// 		KEYBOARD_BUTTON key = Win32TranslateKeyInput((VK_CODE)message.wParam);
+				// 		if (key < KEY_COUNT)
+				// 			input.keyboard.ToggleKey(key);
+				// 	}
+				// 	if (input.keyboard.isPressed[KEY_F4] && input.keyboard.isPressed[KEY_ALT])
+				// 	{
+				// 		PostQuitMessage(0);
+				// 		return 0;
+				// 	}
+				// 	break;
+				// }
+				// case WM_SYSKEYUP:
+				// case WM_KEYUP:
+				// {
+				// 	KEYBOARD_BUTTON key = Win32TranslateKeyInput((VK_CODE)message.wParam);
+				// 	if (key < KEY_COUNT)
+				// 		input.keyboard.ToggleKey(key);
+				// 	break;
+				// }
+
+				// //------------------------------------------------------------------------
+				// // MOUSE EVENTS
+				// //------------------------------------------------------------------------
+				// case WM_INPUT:
+				// {
+				// 	UINT dwSize = sizeof(RAWINPUT);
+				// 	local_var BYTE lpb[sizeof(RAWINPUT)];
+				// 	if (GetRawInputData((HRAWINPUT)message.lParam, RID_INPUT, lpb, &dwSize, sizeof(RAWINPUTHEADER)) == -1)
+				// 	{
+				// 		break;
+				// 	}
+			case WM_MOUSEMOVE:
+			{
+				POINTS p = MAKEPOINTS(message.lParam);
+				p.y = 519 - p.y;
+				bool isInWindow =
+					p.x >= 0 && p.x < 656 &&
+					p.y >= 0 && p.y < 519;
+				if (true)
 				{
-					// We read the file successfully
+					while (ShowCursor(TRUE) < 0)
+						;
+					ClipCursor(0);
 				}
 				else
 				{
-					PlatformFreeFileMemory(result.content);
-					result = {};
+					while (ShowCursor(FALSE) >= 0)
+						;
+					RECT rect;
+					GetClientRect(state->handle, &rect);
+					MapWindowPoints(state->handle, 0, (POINT *)(&rect), 2);
+					ClipCursor(&rect);
 				}
+				if (isInWindow)
+				{
+					SetCapture(state->handle);
+				}
+				else
+				{
+					ReleaseCapture();
+				}
+				break;
+			}
+			// 	// RAWINPUT *raw = (RAWINPUT *)lpb;
+			// 	// if (raw->header.dwType == RIM_TYPEMOUSE &&
+			// 	// 	(raw->data.mouse.lLastX != 0 || raw->data.mouse.lLastY != 0))
+			// 	// {
+			// 	// 	input.mouse.newPos.X += (f32)raw->data.mouse.lLastX;
+			// 	// 	input.mouse.newPos.Y += (f32)raw->data.mouse.lLastY;
+			// 	// }
+			// 	break;
+			// }
+			// case WM_LBUTTONDOWN:
+			// 	input.mouse.leftIsPressed = true;
+			// 	break;
+			// case WM_RBUTTONDOWN:
+			// 	input.mouse.rightIsPressed = true;
+			// 	break;
+			// case WM_LBUTTONUP:
+			// 	input.mouse.leftIsPressed = false;
+			// 	break;
+			// case WM_RBUTTONUP:
+			// 	input.mouse.rightIsPressed = false;
+			// 	break;
+			// case WM_MOUSEWHEEL:
+			// 	input.mouse.UpdateWheelDelta(GET_WHEEL_DELTA_WPARAM(message.wParam));
+			// case WM_MOUSELEAVE:
+			// 	POINTS p = MAKEPOINTS(message.lParam);
+			// 	input.mouse.isInWindow = false;
+			// 	break;
+			// case WM_KILLFOCUS:
+			// 	input.keyboard.Clear();
+			// 	break;
+			default:
+			{
+				TranslateMessage(&message);
+				DispatchMessage(&message);
+				break;
+			}
 			}
 		}
-		CloseHandle(fileHandle);
+		return true;
 	}
-	// NOTE:  We can add logging in case these steps fail.
-	return result;
-}
 
-static_func bool PlatformWriteFile(const char *filepath, u32 memorySize, void *memory)
-{
-	bool result = false;
-
-	char fullFilePath[MAX_PATH] = {};
-	if (GetFullPathNameA(filepath, ArrayCount(fullFilePath), fullFilePath, 0) == 0)
-		return result;
-
-	HANDLE fileHandle = CreateFileA(filepath, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
-	if (fileHandle != INVALID_HANDLE_VALUE)
+	static_func read_file_result PlatformReadFile(const char *filepath)
 	{
-		DWORD bytesWritten;
-		if (WriteFile(fileHandle, memory, memorySize, &bytesWritten, 0))
+		read_file_result result = {};
+
+		char fullFilePath[MAX_PATH] = {};
+		if (GetFullPathNameA(filepath, ArrayCount(fullFilePath), fullFilePath, 0) == 0)
+			return result;
+
+		HANDLE fileHandle = CreateFileA(fullFilePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
+		if (fileHandle != INVALID_HANDLE_VALUE)
 		{
-			// We wrote into the file successfully
-			result = (bytesWritten == memorySize);
+			LARGE_INTEGER fileSize;
+			if (GetFileSizeEx(fileHandle, &fileSize))
+			{ // Truncate 64 bit value to 32 bit because VirtualAlloc only takes 32bit value
+				ASSERT(fileSize.QuadPart <= 0xFFFFFFFF);
+				result.size = (u32)fileSize.QuadPart;
+
+				result.content = VirtualAlloc(0, result.size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+				if (result.content)
+				{
+					DWORD bytesRead;
+					if (ReadFile(fileHandle, result.content, result.size, &bytesRead, 0) &&
+						result.size == bytesRead)
+					{
+						// We read the file successfully
+					}
+					else
+					{
+						PlatformFreeFileMemory(result.content);
+						result = {};
+					}
+				}
+			}
+			CloseHandle(fileHandle);
 		}
-		CloseHandle(fileHandle);
+		// NOTE:  We can add logging in case these steps fail.
+		return result;
 	}
-	// NOTE:  We can add logging in case these steps fail.
-	return result;
-}
 
-static_func void PlatformFreeFileMemory(void *memory)
-{
-	if (memory)
+	static_func bool PlatformWriteFile(const char *filepath, u32 memorySize, void *memory)
 	{
-		VirtualFree(memory, 0, MEM_RELEASE);
+		bool result = false;
+
+		char fullFilePath[MAX_PATH] = {};
+		if (GetFullPathNameA(filepath, ArrayCount(fullFilePath), fullFilePath, 0) == 0)
+			return result;
+
+		HANDLE fileHandle = CreateFileA(filepath, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+		if (fileHandle != INVALID_HANDLE_VALUE)
+		{
+			DWORD bytesWritten;
+			if (WriteFile(fileHandle, memory, memorySize, &bytesWritten, 0))
+			{
+				// We wrote into the file successfully
+				result = (bytesWritten == memorySize);
+			}
+			CloseHandle(fileHandle);
+		}
+		// NOTE:  We can add logging in case these steps fail.
+		return result;
 	}
-}
 
-static_func bool PlatformGetFileWriteTime(const char *filepath, file_write_time *writeTime)
-{
-	char fullFilePath[MAX_PATH] = {};
-	if (GetFullPathNameA(filepath, ArrayCount(fullFilePath), fullFilePath, 0) == 0)
-		return false; // Couldn't find file
-
-	if (writeTime->data)
+	static_func void PlatformFreeFileMemory(void *memory)
 	{
-		delete writeTime->data;
+		if (memory)
+		{
+			VirtualFree(memory, 0, MEM_RELEASE);
+		}
 	}
-	writeTime->data = new FILETIME;
-	FILETIME *result = (FILETIME *)writeTime->data;
-	WIN32_FIND_DATA data = {};
-	HANDLE handle = FindFirstFileA(fullFilePath, (LPWIN32_FIND_DATAA)&data);
-	if (handle != INVALID_HANDLE_VALUE)
-	{
-		*result = data.ftLastWriteTime;
-		FindClose(handle);
-	}
-	return true;
-}
 
-static_func bool PlatformWasFileUpdated(const char *filepath, file_write_time *writeTime)
-{
-	if (!writeTime->data)
+	static_func bool PlatformGetFileWriteTime(const char *filepath, file_write_time *writeTime)
 	{
+		char fullFilePath[MAX_PATH] = {};
+		if (GetFullPathNameA(filepath, ArrayCount(fullFilePath), fullFilePath, 0) == 0)
+			return false; // Couldn't find file
+
+		if (writeTime->data)
+		{
+			delete writeTime->data;
+		}
+		writeTime->data = new FILETIME;
+		FILETIME *result = (FILETIME *)writeTime->data;
+		WIN32_FIND_DATA data = {};
+		HANDLE handle = FindFirstFileA(fullFilePath, (LPWIN32_FIND_DATAA)&data);
+		if (handle != INVALID_HANDLE_VALUE)
+		{
+			*result = data.ftLastWriteTime;
+			FindClose(handle);
+		}
+		return true;
+	}
+
+	static_func bool PlatformWasFileUpdated(const char *filepath, file_write_time *writeTime)
+	{
+		if (!writeTime->data)
+		{
+			return false;
+		}
+
+		file_write_time newWriteTime;
+		PlatformGetFileWriteTime(filepath, &newWriteTime);
+
+		FILETIME *win32newWriteTime = (FILETIME *)writeTime->data;
+		FILETIME *win32oldWriteTime = (FILETIME *)writeTime->data;
+		if (CompareFileTime(win32newWriteTime, win32oldWriteTime) == 1)
+		{
+			*win32oldWriteTime = *win32newWriteTime;
+			return true;
+		}
 		return false;
 	}
 
-	file_write_time newWriteTime;
-	PlatformGetFileWriteTime(filepath, &newWriteTime);
-
-	FILETIME *win32newWriteTime = (FILETIME *)writeTime->data;
-	FILETIME *win32oldWriteTime = (FILETIME *)writeTime->data;
-	if (CompareFileTime(win32newWriteTime, win32oldWriteTime) == 1)
+	static_func void Win32GetWindowDim(HWND handle, u32 &width, u32 &height)
 	{
-		*win32oldWriteTime = *win32newWriteTime;
-		return true;
+		RECT rect = {};
+		GetWindowRect(handle, &rect);
+		width = (u32)(rect.right - rect.left);
+		height = (u32)(rect.bottom - rect.top);
 	}
-	return false;
-}
 
-static_func void Win32GetWindowDim(HWND handle, u32 &width, u32 &height)
-{
-	RECT rect = {};
-	GetWindowRect(handle, &rect);
-	width = (u32)(rect.right - rect.left);
-	height = (u32)(rect.bottom - rect.top);
-}
+	// Copied from: https://github.com/travisvroman/kohi/commit/ca0600eaefd11ed674c5a4642fb13ce17a96656f#diff-7f4ba46fd3ad1ae4558ae188a098f3a9d7009e1dbfc890e6562602f0f790e1e5
+	static_func void PlatformPrint(const char *message, u8 colour)
+	{
+		HANDLE console_handle = GetStdHandle(STD_OUTPUT_HANDLE);
+		// FATAL,ERROR,WARN,INFO,DEBUG,TRACE
+		static u8 levels[6] = {64, 4, 6, 2, 1, 8};
+		SetConsoleTextAttribute(console_handle, levels[colour]);
+		OutputDebugStringA(message);
+		size_t length = strlen(message);
+		LPDWORD number_written = 0;
+		WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), message, (DWORD)length, number_written, 0);
+	}
 
-// Copied from: https://github.com/travisvroman/kohi/commit/ca0600eaefd11ed674c5a4642fb13ce17a96656f#diff-7f4ba46fd3ad1ae4558ae188a098f3a9d7009e1dbfc890e6562602f0f790e1e5
-static_func void PlatformPrint(const char *message, u8 colour)
-{
-	HANDLE console_handle = GetStdHandle(STD_OUTPUT_HANDLE);
-	// FATAL,ERROR,WARN,INFO,DEBUG,TRACE
-	static u8 levels[6] = {64, 4, 6, 2, 1, 8};
-	SetConsoleTextAttribute(console_handle, levels[colour]);
-	OutputDebugStringA(message);
-	size_t length = strlen(message);
-	LPDWORD number_written = 0;
-	WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), message, (DWORD)length, number_written, 0);
-}
-
-// Copied from: https://github.com/travisvroman/kohi/commit/ca0600eaefd11ed674c5a4642fb13ce17a96656f#diff-7f4ba46fd3ad1ae4558ae188a098f3a9d7009e1dbfc890e6562602f0f790e1e5
-static_func void PlatformPrintError(const char *message, u8 colour)
-{
-	HANDLE console_handle = GetStdHandle(STD_ERROR_HANDLE);
-	// FATAL,ERROR,WARN,INFO,DEBUG,TRACE
-	static u8 levels[6] = {64, 4, 6, 2, 1, 8};
-	SetConsoleTextAttribute(console_handle, levels[colour]);
-	OutputDebugStringA(message);
-	size_t length = strlen(message);
-	LPDWORD number_written = 0;
-	WriteConsoleA(GetStdHandle(STD_ERROR_HANDLE), message, (DWORD)length, number_written, 0);
-}
+	// Copied from: https://github.com/travisvroman/kohi/commit/ca0600eaefd11ed674c5a4642fb13ce17a96656f#diff-7f4ba46fd3ad1ae4558ae188a098f3a9d7009e1dbfc890e6562602f0f790e1e5
+	static_func void PlatformPrintError(const char *message, u8 colour)
+	{
+		HANDLE console_handle = GetStdHandle(STD_ERROR_HANDLE);
+		// FATAL,ERROR,WARN,INFO,DEBUG,TRACE
+		static u8 levels[6] = {64, 4, 6, 2, 1, 8};
+		SetConsoleTextAttribute(console_handle, levels[colour]);
+		OutputDebugStringA(message);
+		size_t length = strlen(message);
+		LPDWORD number_written = 0;
+		WriteConsoleA(GetStdHandle(STD_ERROR_HANDLE), message, (DWORD)length, number_written, 0);
+	}
 
 #if 0
 static_func KEYBOARD_BUTTON Win32TranslateKeyInput(VK_CODE code)
@@ -762,5 +766,5 @@ static_func bool Win32InitializeMemory(engine_platform *engine)
 	return result;
 }
 #endif
-
+}
 #endif

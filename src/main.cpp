@@ -1,21 +1,16 @@
-#include "platform/platform.h"
+#include "core/application.h"
+
+using namespace HY3D;
 
 int main()
 {
-	LOG_FATAL("test");
-	LOG_ERROR("test");
-	LOG_DEBUG("test");
-	LOG_INFO("test");
-	LOG_WARN("test");
-	LOG_TRACE("test");
-	platform_state platformState = {};
-	if (PlatformInitialize(&platformState, "HY3D ENGINE", 640, 480))
+	application_config config = {640, 480, "HY3D Engine"};
+	if (ApplicationInitialize(&config))
 	{
-		while (PlatformProcessMessages(&platformState))
+		if (!ApplicationRun())
 		{
-			continue;
+			LOG_ERROR("Application stopped running unexpectedly");
 		}
 	}
-	PlatformTerminate(&platformState);
 	return 0;
 }
