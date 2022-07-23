@@ -8,6 +8,8 @@ namespace HY3D
 #include <stdio.h>
 #include <string.h>
 
+	global_var logger_api loggerAPI;
+
 	void LogOutput(log_level level, const char *message, ...)
 	{
 		const char *level_strings[6] = {"[FATAL]: ", "[ERROR]: ", "[WARN]:  ", "[INFO]:  ", "[DEBUG]: ", "[TRACE]: "};
@@ -31,9 +33,13 @@ namespace HY3D
 		char out_message2[msg_length];
 		sprintf(out_message2, "%s%s\n", level_strings[level], out_message);
 
+#if 1
 		if (is_error)
-			PlatformPrintError(out_message2, (u8)level);
+			loggerAPI.PrintError(out_message2, (u8)level);
 		else
-			PlatformPrint(out_message2, (u8)level);
+			loggerAPI.Print(out_message2, (u8)level);
+#else
+		printf(out_message2);
+#endif
 	}
 }

@@ -1,15 +1,23 @@
 #include "engine.h"
 
-// #include "core/logger.h"
+// NOTE: We basicaly compile logger.cpp two times in order to access the function definitions
+// from the engine as well. It's just one function so it does not really matter.
+#include "core/logger.cpp"
 
 namespace HY3D
 {
+	global_var platform_api *platformAPI;
+
 	EngineInitializeSignature(EngineInitialize)
 	{
-		// LOG_DEBUG(__FUNCTION__);
-
 		platformAPI = &engine->platformAPI;
-		platformAPI->ReadFile("test.txt");
+
+		// NOTE: We are only doing this because the logger uses special Platform specific functions
+		// to print to the console, so we need to set the function pointers sinces the engine does
+		// not know anything about the platform
+		platformAPI->BindToLogger(&loggerAPI);
+
+		LOG_DEBUG(__FUNCTION__);
 	}
 
 	EngineUpdateSignature(EngineUpdate)
@@ -22,6 +30,6 @@ namespace HY3D
 
 	EngineTerminateSignature(EngineTerminate)
 	{
-		// LOG_DEBUG(__FUNCTION__);
+		LOG_DEBUG(__FUNCTION__);
 	}
 }

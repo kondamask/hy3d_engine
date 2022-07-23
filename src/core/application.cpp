@@ -1,5 +1,6 @@
 #include "application.h"
 #include "engine/engine_stubs.h"
+
 namespace HY3D
 {
 #if _DEBUG
@@ -20,6 +21,7 @@ namespace HY3D
 		{
 			return false;
 		}
+		PlatformBindToLogger(&loggerAPI);
 
 		dynamic_library engineLibrary = {};
 		if (PlatformLoadDynamicLibrary(ENGINE_DLL, &engineLibrary))
@@ -31,7 +33,7 @@ namespace HY3D
 		}
 		EngineValidateAPI(&appState.engine);
 
-		PlatformBindEnginePlatformAPI(&appState.engine.platformAPI);
+		PlatformBindToEngine(&appState.engine.platformAPI);
 
 		appState.engine.Initialize(&appState.engine);
 

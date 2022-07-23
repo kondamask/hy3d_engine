@@ -524,9 +524,16 @@ namespace HY3D
 		return false;
 	}
 
-	void PlatformBindEnginePlatformAPI(platform_api *platformAPI)
+	void PlatformBindToEngine(platform_api *platformAPI)
 	{
 		platformAPI->ReadFile = PlatformReadFile;
+		platformAPI->BindToLogger = PlatformBindToLogger;
+	}
+
+	void PlatformBindToLogger(logger_api *loggerAPI_)
+	{
+		loggerAPI_->Print = PlatformPrint;
+		loggerAPI_->PrintError = PlatformPrintError;
 	}
 
 #if 0

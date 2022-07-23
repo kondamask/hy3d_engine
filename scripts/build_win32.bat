@@ -1,8 +1,7 @@
 @echo off
 
-REM ctime -begin hy3d_engine_build_time.ctm
-
 ECHO ----------------------------------------------------------------------------
+ctime -begin hy3d_engine_build_time.ctm
 
 REM Check if build mode is specified
 IF [%1] == [] (
@@ -15,13 +14,13 @@ REM Set debug build options
 IF %1 == Debug (
 	SET ModeFlags=-MTd -Od -Zi -Zo
     SET OutputPath=.\bin\Debug
-	ECHO Building Debug
+	ECHO Building Debug...
 )
 REM Set release build options
 IF %1 == Release (
 	SET ModeFlags=-O2
     SET OutputPath=.\bin\Release
-	ECHO Building Release
+	ECHO Building Release...
 )
 IF NOT EXIST %OutputPath% MKDIR %OutputPath%
 PUSHD %OutputPath%
@@ -56,4 +55,4 @@ ECHO ---------------------------------------------------------------------------
 
 :EOF
 
-REM ctime -end hy3d_engine_build_time.ctm
+ctime -end hy3d_engine_build_time.ctm

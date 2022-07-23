@@ -2,6 +2,7 @@
 #define INCLUDE_LOGGER_H
 
 #include "defines.h"
+
 namespace HY3D
 {
 // Copied from: https://github.com/travisvroman/kohi/commit/b9a8729ceb7b4681b1694580f96961c06ac33b6f
@@ -11,12 +12,12 @@ namespace HY3D
 #define LOG_TRACE_ENABLED 1
 
 // Disable debug and trace logging for release builds.
-#if KRELEASE == 1
+#if HY3D_RELEASE == 1
 #define LOG_DEBUG_ENABLED 0
 #define LOG_TRACE_ENABLED 0
 #endif
 
-	typedef enum log_level
+	enum log_level
 	{
 		LOG_LEVEL_FATAL = 0,
 		LOG_LEVEL_ERROR = 1,
@@ -24,7 +25,13 @@ namespace HY3D
 		LOG_LEVEL_INFO = 3,
 		LOG_LEVEL_DEBUG = 4,
 		LOG_LEVEL_TRACE = 5
-	} log_level;
+	};
+
+	struct logger_api
+	{
+		void (*Print)(const char *message, u8 colour);
+		void (*PrintError)(const char *message, u8 colour);
+	};
 
 	void LogOutput(log_level level, const char *message, ...);
 

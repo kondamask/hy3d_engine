@@ -50,8 +50,10 @@ namespace HY3D
 	// We do this so that we can call to these functions from the engine.
 	struct platform_api
 	{
+		void (*BindToLogger)(logger_api *loggerAPI);
 		read_file_result (*ReadFile)(const char *filepath);
 	};
-	void PlatformBindEnginePlatformAPI(platform_api *platformAPI);
+	void PlatformBindToEngine(platform_api *platformAPI);
+	void PlatformBindToLogger(logger_api *loggerAPI_);
 }
 #endif // INCLUDE_PLATFORM_H

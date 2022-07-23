@@ -6,8 +6,6 @@
 
 namespace HY3D
 {
-	global_var platform_api *platformAPI;
-
 	struct engine
 	{
 		void (*Initialize)(engine *engine);
@@ -19,23 +17,23 @@ namespace HY3D
 	};
 
 #define EngineInitializeSignature(name) void name(engine *engine)
-	typedef EngineInitializeSignature(_EngineInitialize);
 	extern "C" HY3D_API EngineInitializeSignature(EngineInitialize);
+	typedef EngineInitializeSignature(_EngineInitialize);
 #define pfnEngineInitialize _EngineInitialize *
 
 #define EngineUpdateSignature(name) void name()
-	typedef EngineUpdateSignature(_EngineUpdate);
 	extern "C" HY3D_API EngineUpdateSignature(EngineUpdate);
+	typedef EngineUpdateSignature(_EngineUpdate);
 #define pfnEngineUpdate _EngineUpdate *
 
 #define EngineRenderSignature(name) void name()
-	typedef EngineRenderSignature(_EngineRender);
 	extern "C" HY3D_API EngineRenderSignature(EngineRender);
+	typedef EngineRenderSignature(_EngineRender);
 #define pfnEngineRender _EngineRender *
 
 #define EngineTerminateSignature(name) void name()
-	typedef EngineTerminateSignature(_EngineTerminate);
 	extern "C" HY3D_API EngineTerminateSignature(EngineTerminate);
+	typedef EngineTerminateSignature(_EngineTerminate);
 #define pfnEngineTerminate _EngineTerminate *
 }
 
