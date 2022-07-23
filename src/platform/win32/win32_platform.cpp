@@ -6,6 +6,7 @@ namespace HY3D
 {
 #include "resource.h"
 #include "hy3d_windows.h"
+#include <stdio.h>
 
 #define WIN32_WINDOW_X_BORDER 23
 #define WIN32_WINDOW_Y_BORDER 39
@@ -26,9 +27,9 @@ namespace HY3D
 		bool isValid;
 	};
 
-	static_func LRESULT CALLBACK Win32PlatformProcessMessages(HWND handle, UINT message, WPARAM wParam, LPARAM lParam);
+	LRESULT CALLBACK Win32PlatformProcessMessages(HWND handle, UINT message, WPARAM wParam, LPARAM lParam);
 
-	static_func bool PlatformInitialize(platform_state *platformState, const char *appName, i32 width, i32 height)
+	bool PlatformInitialize(platform_state *platformState, const char *appName, i32 width, i32 height)
 	{
 		platformState->data = new win32_platform_state;
 		win32_platform_state *state = (win32_platform_state *)platformState->data;
@@ -103,7 +104,7 @@ namespace HY3D
 		return true;
 	}
 
-	static_func bool PlatformTerminate(platform_state *platformState)
+	bool PlatformTerminate(platform_state *platformState)
 	{
 		win32_platform_state *state = (win32_platform_state *)platformState->data;
 
@@ -117,7 +118,7 @@ namespace HY3D
 	}
 
 	// Windows Specific Messages
-	static_func LRESULT CALLBACK Win32PlatformProcessMessages(HWND handle, UINT message, WPARAM wParam, LPARAM lParam)
+	LRESULT CALLBACK Win32PlatformProcessMessages(HWND handle, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		// NOTE: The *state pointer doesn't need to be checked for null since it always gets a value
 		// before we need to process other messages. On application start we get:
@@ -168,7 +169,7 @@ namespace HY3D
 	}
 
 	// General Use Messages
-	static_func bool PlatformProcessMessages(platform_state *platformState)
+	bool PlatformProcessMessages(platform_state *platformState)
 	{
 		win32_platform_state *state = (win32_platform_state *)platformState->data;
 		// engine_input &input = engine.input;
@@ -306,7 +307,7 @@ namespace HY3D
 		return true;
 	}
 
-	static_func read_file_result PlatformReadFile(const char *filepath)
+	read_file_result PlatformReadFile(const char *filepath)
 	{
 		read_file_result result = {};
 
@@ -345,7 +346,7 @@ namespace HY3D
 		return result;
 	}
 
-	static_func bool PlatformWriteFile(const char *filepath, u32 memorySize, void *memory)
+	bool PlatformWriteFile(const char *filepath, u32 memorySize, void *memory)
 	{
 		bool result = false;
 
@@ -368,7 +369,7 @@ namespace HY3D
 		return result;
 	}
 
-	static_func void PlatformFreeFileMemory(void *memory)
+	void PlatformFreeFileMemory(void *memory)
 	{
 		if (memory)
 		{
@@ -376,7 +377,7 @@ namespace HY3D
 		}
 	}
 
-	static_func bool PlatformGetFileWriteTime(const char *filepath, file_write_time *writeTime)
+	bool PlatformGetFileWriteTime(const char *filepath, file_write_time *writeTime)
 	{
 		char fullFilePath[MAX_PATH] = {};
 		if (GetFullPathNameA(filepath, ArrayCount(fullFilePath), fullFilePath, 0) == 0)
@@ -394,7 +395,7 @@ namespace HY3D
 		return true;
 	}
 
-	static_func bool PlatformWasFileUpdated(const char *filepath, file_write_time *writeTime)
+	bool PlatformWasFileUpdated(const char *filepath, file_write_time *writeTime)
 	{
 		if (!writeTime->data)
 		{
@@ -414,7 +415,7 @@ namespace HY3D
 		return false;
 	}
 
-	static_func void Win32GetWindowDim(HWND handle, u32 &width, u32 &height)
+	void Win32GetWindowDim(HWND handle, u32 &width, u32 &height)
 	{
 		RECT rect = {};
 		GetWindowRect(handle, &rect);
@@ -423,7 +424,7 @@ namespace HY3D
 	}
 
 	// Copied from: https://github.com/travisvroman/kohi/commit/ca0600eaefd11ed674c5a4642fb13ce17a96656f#diff-7f4ba46fd3ad1ae4558ae188a098f3a9d7009e1dbfc890e6562602f0f790e1e5
-	static_func void PlatformPrint(const char *message, u8 colour)
+	void PlatformPrint(const char *message, u8 colour)
 	{
 		HANDLE console_handle = GetStdHandle(STD_OUTPUT_HANDLE);
 		// FATAL,ERROR,WARN,INFO,DEBUG,TRACE
@@ -436,7 +437,7 @@ namespace HY3D
 	}
 
 	// Copied from: https://github.com/travisvroman/kohi/commit/ca0600eaefd11ed674c5a4642fb13ce17a96656f#diff-7f4ba46fd3ad1ae4558ae188a098f3a9d7009e1dbfc890e6562602f0f790e1e5
-	static_func void PlatformPrintError(const char *message, u8 colour)
+	void PlatformPrintError(const char *message, u8 colour)
 	{
 		HANDLE console_handle = GetStdHandle(STD_ERROR_HANDLE);
 		// FATAL,ERROR,WARN,INFO,DEBUG,TRACE
@@ -448,7 +449,7 @@ namespace HY3D
 		WriteConsoleA(GetStdHandle(STD_ERROR_HANDLE), message, (DWORD)length, number_written, 0);
 	}
 
-	static_func bool PlatformLoadDynamicLibrary(const char *filepath, dynamic_library *libOut)
+	bool PlatformLoadDynamicLibrary(const char *filepath, dynamic_library *libOut)
 	{
 		libOut->data = new win32_dll;
 		win32_dll *dll = (win32_dll *)libOut->data;
@@ -498,19 +499,20 @@ namespace HY3D
 		return false;
 	}
 
-	static_func void *PlatformGetDynamicLibraryFunction(dynamic_library *lib, const char *function)
+	void *PlatformGetDynamicLibraryFunction(dynamic_library *lib, const char *function)
 	{
 		win32_dll *dll = (win32_dll *)lib->data;
 		void *result = 0;
 		if (dll->dll)
 		{
 			result = GetProcAddress(dll->dll, function);
-			ASSERT_MSG(result, "Function not found in dll");
+			if (!result)
+				LOG_ERROR("Function '%s' not found in dll", function);
 		}
 		return result;
 	}
 
-	static_func bool PlatformUnloadDynamicLibrary(dynamic_library *lib)
+	bool PlatformUnloadDynamicLibrary(dynamic_library *lib)
 	{
 		win32_dll *dll = (win32_dll *)lib->data;
 		if (dll->dll)
@@ -522,8 +524,13 @@ namespace HY3D
 		return false;
 	}
 
+	void PlatformBindEnginePlatformAPI(platform_api *platformAPI)
+	{
+		platformAPI->ReadFile = PlatformReadFile;
+	}
+
 #if 0
-static_func KEYBOARD_BUTTON Win32TranslateKeyInput(VK_CODE code)
+KEYBOARD_BUTTON Win32TranslateKeyInput(VK_CODE code)
 {
 	switch (code)
 	{
@@ -725,7 +732,7 @@ static_func KEYBOARD_BUTTON Win32TranslateKeyInput(VK_CODE code)
 	}
 }
 
-static_func bool Win32InitializeMemory(engine_platform *engine)
+bool Win32InitializeMemory(engine_platform *engine)
 {
 	engine_memory &memory = engine->memory;
 

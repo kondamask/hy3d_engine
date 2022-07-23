@@ -1,5 +1,5 @@
 #include "application.h"
-
+#include "engine/engine_stubs.h"
 namespace HY3D
 {
 #if _DEBUG
@@ -8,7 +8,7 @@ namespace HY3D
 #define ENGINE_DLL "bin\\Release\\engine.dll"
 #endif
 
-	static_func bool ApplicationInitialize(application_config *appInfo)
+	bool ApplicationInitialize(application_config *appInfo)
 	{
 		if (appState.isInitialized)
 		{
@@ -29,20 +29,16 @@ namespace HY3D
 			appState.engine.Render = (pfnEngineRender)PlatformGetDynamicLibraryFunction(&engineLibrary, "EngineRender");
 			appState.engine.Terminate = (pfnEngineTerminate)PlatformGetDynamicLibraryFunction(&engineLibrary, "EngineTerminate");
 		}
+		EngineValidateAPI(&appState.engine);
 
-		else
-		{
-			appState.engine.Initialize = EngineInitializeSTUB;
-			appState.engine.Update = EngineUpdateSTUB;
-			appState.engine.Render = EngineRenderSTUB;
-			appState.engine.Terminate = EngineTerminateSTUB;
-		}
-		appState.engine.Initialize();
+		PlatformBindEnginePlatformAPI(&appState.engine.platformAPI);
+
+		appState.engine.Initialize(&appState.engine);
 
 		return true;
 	}
 
-	static_func bool ApplicationRun()
+	bool ApplicationRun()
 	{
 		while (PlatformProcessMessages(&appState.platformState))
 		{

@@ -1,12 +1,15 @@
 #include "engine.h"
 
-#include <stdio.h>
+// #include "core/logger.h"
 
 namespace HY3D
 {
 	EngineInitializeSignature(EngineInitialize)
 	{
-		printf("Engine Initialized\n");
+		// LOG_DEBUG(__FUNCTION__);
+
+		platformAPI = &engine->platformAPI;
+		platformAPI->ReadFile("test.txt");
 	}
 
 	EngineUpdateSignature(EngineUpdate)
@@ -19,6 +22,6 @@ namespace HY3D
 
 	EngineTerminateSignature(EngineTerminate)
 	{
-		printf("Engine Terminated\n");
+		// LOG_DEBUG(__FUNCTION__);
 	}
 }

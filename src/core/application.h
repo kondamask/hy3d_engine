@@ -2,8 +2,8 @@
 #define INCLUDE_APPLICATION_H
 
 #include "defines.h"
-#include "engine.h"
 #include "platform/platform.h"
+#include "engine/engine.h"
 
 namespace HY3D
 {
@@ -25,7 +25,7 @@ namespace HY3D
 	};
 	global_var application_state appState;
 
-	static_func bool ApplicationInitialize(application_config *appInfo);
-	static_func bool ApplicationRun();
+	bool ApplicationInitialize(application_config *appInfo);
+	bool ApplicationRun();
 }
 #endif // INCLUDE_APPLICATION_H

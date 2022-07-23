@@ -15,35 +15,43 @@ namespace HY3D
 	{
 		void *data;
 	};
-	static_func bool PlatformInitialize(platform_state *platformState, const char *appName, i32 width, i32 height);
-	static_func bool PlatformTerminate(platform_state *platformState);
-	static_func bool PlatformProcessMessages(platform_state *platformState);
+	bool PlatformInitialize(platform_state *platformState, const char *appName, i32 width, i32 height);
+	bool PlatformTerminate(platform_state *platformState);
+	bool PlatformProcessMessages(platform_state *platformState);
 
 	struct read_file_result
 	{
 		void *content;
 		u32 size;
 	};
-	static_func read_file_result PlatformReadFile(const char *filepath);
-	static_func bool PlatformWriteFile(const char *filepath, u32 memorySize, void *memory);
-	static_func void PlatformFreeFileMemory(void *memory);
+	read_file_result PlatformReadFile(const char *filepath);
+	bool PlatformWriteFile(const char *filepath, u32 memorySize, void *memory);
+	void PlatformFreeFileMemory(void *memory);
 
 	struct file_write_time
 	{
 		void *data;
 	};
-	static_func bool PlatformGetFileWriteTime(const char *filepath, file_write_time *writeTime);
-	static_func bool PlatformWasFileUpdated(const char *filepath, file_write_time *writeTime);
+	bool PlatformGetFileWriteTime(const char *filepath, file_write_time *writeTime);
+	bool PlatformWasFileUpdated(const char *filepath, file_write_time *writeTime);
 
-	static_func void PlatformPrint(const char *message, u8 colour);
-	static_func void PlatformPrintError(const char *message, u8 colour);
+	void PlatformPrint(const char *message, u8 colour);
+	void PlatformPrintError(const char *message, u8 colour);
 
 	struct dynamic_library
 	{
 		void *data;
 	};
-	static_func bool PlatformLoadDynamicLibrary(const char *filepath, dynamic_library *libOut);
-	static_func void *PlatformGetDynamicLibraryFunction(dynamic_library *lib, const char *function);
-	static_func bool PlatformUnloadDynamicLibrary(dynamic_library *lib);
+	bool PlatformLoadDynamicLibrary(const char *filepath, dynamic_library *libOut);
+	void *PlatformGetDynamicLibraryFunction(dynamic_library *lib, const char *function);
+	bool PlatformUnloadDynamicLibrary(dynamic_library *lib);
+
+	// NOTE: We have a struct of function pointer pointing to the plaform specific api functions
+	// We do this so that we can call to these functions from the engine.
+	struct platform_api
+	{
+		read_file_result (*ReadFile)(const char *filepath);
+	};
+	void PlatformBindEnginePlatformAPI(platform_api *platformAPI);
 }
 #endif // INCLUDE_PLATFORM_H

@@ -1,6 +1,8 @@
 @echo off
 
-ctime -begin hy3d_engine_build_time.ctm
+REM ctime -begin hy3d_engine_build_time.ctm
+
+ECHO ----------------------------------------------------------------------------
 
 REM Check if build mode is specified
 IF [%1] == [] (
@@ -45,13 +47,13 @@ REM BUILD WINDOWS RESOURCE
 rc /fo win32_hy3d.res /nologo %SRC%\platform\win32\resource.rc
 SET COptions=%COptions% win32_hy3d.res
 
-cl %COptions% %SRC%\core\engine.cpp -Fmengine.map -LD -link %LFlags% -PDB:engine_%RANDOM%.pdb
+cl %COptions% %SRC%\engine\engine.cpp  -LD -link %LFlags% -PDB:engine_%RANDOM%.pdb
 
-cl %COptions% %SRC%\build.cpp -Fe%AppName% -link %LOptions%
+cl %COptions% %SRC%\main.cpp %SRC%\platform\win32\win32_platform.cpp %SRC%\core\core.cpp -Fe%AppName% -link %LOptions%
 POPD
 
 ECHO ----------------------------------------------------------------------------
 
 :EOF
 
-ctime -end hy3d_engine_build_time.ctm
+REM ctime -end hy3d_engine_build_time.ctm

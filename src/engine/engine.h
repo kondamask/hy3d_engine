@@ -2,52 +2,41 @@
 #define INCLUDE_ENGINE_H
 
 #include "defines.h"
+#include "platform/platform.h"
 
 namespace HY3D
 {
+	global_var platform_api *platformAPI;
+
 	struct engine
 	{
-		void (*Initialize)();
+		void (*Initialize)(engine *engine);
 		void (*Update)();
 		void (*Render)();
 		void (*Terminate)();
+
+		platform_api platformAPI;
 	};
 
-#define EngineInitializeSignature(name) void name()
+#define EngineInitializeSignature(name) void name(engine *engine)
 	typedef EngineInitializeSignature(_EngineInitialize);
+	extern "C" HY3D_API EngineInitializeSignature(EngineInitialize);
 #define pfnEngineInitialize _EngineInitialize *
-	EngineInitializeSignature(EngineInitializeSTUB)
-	{
-		return;
-	}
-	extern "C" HY3D_API void EngineInitialize();
 
 #define EngineUpdateSignature(name) void name()
 	typedef EngineUpdateSignature(_EngineUpdate);
+	extern "C" HY3D_API EngineUpdateSignature(EngineUpdate);
 #define pfnEngineUpdate _EngineUpdate *
-	EngineUpdateSignature(EngineUpdateSTUB)
-	{
-		return;
-	}
-	extern "C" HY3D_API void EngineUpdate();
 
 #define EngineRenderSignature(name) void name()
 	typedef EngineRenderSignature(_EngineRender);
+	extern "C" HY3D_API EngineRenderSignature(EngineRender);
 #define pfnEngineRender _EngineRender *
-	EngineRenderSignature(EngineRenderSTUB)
-	{
-		return;
-	}
-	extern "C" HY3D_API void EngineRender();
 
 #define EngineTerminateSignature(name) void name()
 	typedef EngineTerminateSignature(_EngineTerminate);
+	extern "C" HY3D_API EngineTerminateSignature(EngineTerminate);
 #define pfnEngineTerminate _EngineTerminate *
-	EngineTerminateSignature(EngineTerminateSTUB)
-	{
-		return;
-	}
-	extern "C" HY3D_API void EngineTerminate();
 }
 
 #endif // INCLUDE_ENGINE_H

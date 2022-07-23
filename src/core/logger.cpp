@@ -8,7 +8,7 @@ namespace HY3D
 #include <stdio.h>
 #include <string.h>
 
-	static_func void LogOutput(log_level level, const char *message, ...)
+	void LogOutput(log_level level, const char *message, ...)
 	{
 		const char *level_strings[6] = {"[FATAL]: ", "[ERROR]: ", "[WARN]:  ", "[INFO]:  ", "[DEBUG]: ", "[TRACE]: "};
 		bool is_error = level < LOG_LEVEL_WARN;

@@ -17,7 +17,7 @@ namespace HY3D
 #define _DebugBreak() __builtin_trap()
 #endif
 
-	static_func void ReportAssertionFailure(const char *expression, const char *message, const char *file, i32 line);
+	void ReportAssertionFailure(const char *expression, const char *message, const char *file, i32 line);
 
 #define ASSERT(expr)                                               \
 	{                                                              \

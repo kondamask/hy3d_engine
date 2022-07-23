@@ -26,7 +26,7 @@ namespace HY3D
 		LOG_LEVEL_TRACE = 5
 	} log_level;
 
-	static_func void LogOutput(log_level level, const char *message, ...);
+	void LogOutput(log_level level, const char *message, ...);
 
 // Logs a fatal-level message.
 #define LOG_FATAL(message, ...) LogOutput(LOG_LEVEL_FATAL, message, ##__VA_ARGS__);
