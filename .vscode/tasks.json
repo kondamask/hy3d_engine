@@ -4,11 +4,8 @@
             "label": "Build Debug",
             "type": "shell",
             "windows": {
-                "command": "scripts\\build_win32.bat",
+                "command": "./build Debug",
             },
-            "args": [
-                "Debug"
-            ],
             "options": {
                 "cwd": "${workspaceFolder}",
             },
@@ -32,11 +29,8 @@
             "label": "Build Release",
             "type": "shell",
             "windows": {
-                "command": "scripts\\build_win32.bat",
+                "command": "./build Release",
             },
-            "args": [
-                "Release"
-            ],
             "options": {
                 "cwd": "${workspaceFolder}",
             },
