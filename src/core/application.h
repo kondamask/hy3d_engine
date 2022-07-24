@@ -22,6 +22,8 @@ namespace HY3D
 		i32 width;
 		i32 height;
 		platform_state platformState;
+
+		dynamic_library engineLibrary;
 	};
 
 	namespace Application

@@ -1,14 +1,8 @@
 #include "application.h"
-#include "engine/engine_stubs.h"
+#include "engine/engine_loader.cpp"
 
 namespace HY3D
 {
-#if _DEBUG
-#define ENGINE_DLL "bin\\Debug\\engine.dll"
-#else
-#define ENGINE_DLL "bin\\Release\\engine.dll"
-#endif
-
 	bool ApplicationInitialize(application_config *appInfo)
 	{
 		if (Application::state.isInitialized)
@@ -22,15 +16,7 @@ namespace HY3D
 			return false;
 		}
 
-		dynamic_library engineLibrary = {};
-		if (PlatformLoadDynamicLibrary(ENGINE_DLL, &engineLibrary))
-		{
-			Application::state.engine.Initialize = (pfnEngineInitialize)PlatformGetDynamicLibraryFunction(&engineLibrary, "EngineInitialize");
-			Application::state.engine.Update = (pfnEngineUpdate)PlatformGetDynamicLibraryFunction(&engineLibrary, "EngineUpdate");
-			Application::state.engine.Render = (pfnEngineRender)PlatformGetDynamicLibraryFunction(&engineLibrary, "EngineRender");
-			Application::state.engine.Terminate = (pfnEngineTerminate)PlatformGetDynamicLibraryFunction(&engineLibrary, "EngineTerminate");
-		}
-		EngineValidateAPI(&Application::state.engine);
+		EngineLoadCode(&Application::state.engine, &Application::state.engineLibrary);
 
 		Application::state.engine.Initialize();
 
@@ -41,6 +27,8 @@ namespace HY3D
 	{
 		while (PlatformProcessMessages(&Application::state.platformState))
 		{
+			EngineReloadCode(&Application::state.engine, &Application::state.engineLibrary);
+
 			if (!Application::state.isSuspended)
 			{
 				Application::state.engine.Update();

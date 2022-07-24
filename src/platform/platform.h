@@ -41,10 +41,14 @@ namespace HY3D
 
 	struct dynamic_library
 	{
-		void *data;
+		char name[255];
+		file_write_time writeTime;
+		void *data; // ptr to os specific data
 	};
 	bool PlatformLoadDynamicLibrary(const char *filepath, dynamic_library *libOut);
 	void *PlatformGetDynamicLibraryFunction(dynamic_library *lib, const char *function);
 	bool PlatformUnloadDynamicLibrary(dynamic_library *lib);
+	bool PlatformUpdatedDynamicLibrary(dynamic_library *lib);
+	bool PlatformReloadDynamicLibrary(dynamic_library *lib);
 }
 #endif // INCLUDE_PLATFORM_H

@@ -23,8 +23,6 @@ namespace HY3D
 	struct win32_dll
 	{
 		HMODULE dll;
-		FILETIME writeTime;
-		bool isValid;
 	};
 
 	// Windows VK_CODES: https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
@@ -642,7 +640,7 @@ namespace HY3D
 		if (GetFullPathNameA(filepath, ArrayCount(fullFilePath), fullFilePath, 0) == 0)
 			return false; // Couldn't find file
 
-		writeTime->data = new FILETIME;
+		writeTime->data = malloc(sizeof(FILETIME));
 		FILETIME *result = (FILETIME *)writeTime->data;
 		WIN32_FIND_DATA data = {};
 		HANDLE handle = FindFirstFileA(fullFilePath, (LPWIN32_FIND_DATAA)&data);
@@ -710,6 +708,8 @@ namespace HY3D
 
 	bool PlatformLoadDynamicLibrary(const char *filepath, dynamic_library *libOut)
 	{
+		strcpy(libOut->name, filepath);
+
 		libOut->data = new win32_dll;
 		win32_dll *dll = (win32_dll *)libOut->data;
 
@@ -738,11 +738,12 @@ namespace HY3D
 		char dllFullPath[MAX_PATH] = {};
 		if (GetFullPathNameA(dllPath, ArrayCount(dllFullPath), dllFullPath, 0) == 0)
 			return false;
+
 		char dllCopyFullPath[MAX_PATH] = {};
 		if (GetFullPathNameA(dllCopyPath, ArrayCount(dllCopyFullPath), dllCopyFullPath, 0) == 0)
 			return false;
 
-		if (!PlatformGetFileWriteTime(dllFullPath, (file_write_time *)&dll->writeTime))
+		if (!PlatformGetFileWriteTime(dllFullPath, &libOut->writeTime))
 			return false;
 
 		if (CopyFileA(dllFullPath, dllCopyFullPath, FALSE))
@@ -750,7 +751,7 @@ namespace HY3D
 			dll->dll = LoadLibraryA(dllCopyFullPath);
 			if (dll->dll)
 			{
-				dll->isValid = true;
+				LOG_DEBUG("Loaded '%s'", filepath);
 				return true;
 			}
 		}
@@ -760,13 +761,16 @@ namespace HY3D
 
 	void *PlatformGetDynamicLibraryFunction(dynamic_library *lib, const char *function)
 	{
-		win32_dll *dll = (win32_dll *)lib->data;
 		void *result = 0;
-		if (dll->dll)
+		if (lib->data)
 		{
-			result = GetProcAddress(dll->dll, function);
-			if (!result)
-				LOG_ERROR("Function '%s' not found in dll", function);
+			win32_dll *dll = (win32_dll *)lib->data;
+			if (dll->dll)
+			{
+				result = GetProcAddress(dll->dll, function);
+				if (!result)
+					LOG_ERROR("Function '%s' not found in dll", function);
+			}
 		}
 		return result;
 	}
@@ -777,7 +781,42 @@ namespace HY3D
 		if (dll->dll)
 		{
 			FreeLibrary(dll->dll);
+			if (lib->writeTime.data)
+				free(lib->writeTime.data);
 			delete dll;
+			return true;
+		}
+		return false;
+	}
+
+	bool PlatformUpdatedDynamicLibrary(dynamic_library *lib)
+	{
+		bool result = false;
+		file_write_time newWriteTime;
+		PlatformGetFileWriteTime(lib->name, &newWriteTime);
+
+		FILETIME *oldFILETIME = (FILETIME *)lib->writeTime.data;
+		FILETIME *newFILETIME = (FILETIME *)newWriteTime.data;
+		if (CompareFileTime(newFILETIME, oldFILETIME) == 1)
+		{
+			oldFILETIME->dwLowDateTime = newFILETIME->dwLowDateTime;
+			oldFILETIME->dwHighDateTime = newFILETIME->dwHighDateTime;
+			result = true;
+		}
+
+		if (newWriteTime.data)
+			free(newWriteTime.data);
+		return result;
+	}
+
+	bool PlatformReloadDynamicLibrary(dynamic_library *lib)
+	{
+		if (PlatformUpdatedDynamicLibrary(lib))
+		{
+			PlatformUnloadDynamicLibrary(lib);
+			PlatformLoadDynamicLibrary(lib->name, lib);
+
+			LOG_DEBUG("Reloaded '%s", lib->name);
 			return true;
 		}
 		return false;
