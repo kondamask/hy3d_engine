@@ -27,6 +27,266 @@ namespace HY3D
 		bool isValid;
 	};
 
+	// Windows VK_CODES: https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
+	namespace Win32VkCode
+	{
+		global_var input_button toInputButton[] = {
+			INPUT_BUTTON_UNSUPPORTED,
+			MOUSE_BUTTON_LEFT,		   // VK_LBUTTON 	    0x1 	The left mouse button
+			MOUSE_BUTTON_RIGHT,		   // VK_RBUTTON 	    0x2 	The right mouse button
+			INPUT_BUTTON_UNSUPPORTED,  // VK_CANCEL 	    0x3 	The Cancel virtual key, used for control-break processing
+			MOUSE_BUTTON_MIDDLE,	   // VK_MBUTTON 	    0x4 	The middle mouse button
+			INPUT_BUTTON_UNSUPPORTED,  // VK_XBUTTON1 		0x5 	X1 mouse button
+			INPUT_BUTTON_UNSUPPORTED,  // VK_XBUTTON2		0x6 	X2 mouse button
+			INPUT_BUTTON_UNSUPPORTED,  // -					0x7 	Undefined
+			KEYBOARD_BUTTON_BACKSPACE, // VK_BACK 		    0x8 	Backspace
+			KEYBOARD_BUTTON_TAB,	   // VK_TAB 		    0x9 	Tab
+			INPUT_BUTTON_UNSUPPORTED,  // -		    		0xA 	Reserved
+			INPUT_BUTTON_UNSUPPORTED,  // -		    		0xB 	Reserved
+			INPUT_BUTTON_UNSUPPORTED,  // VK_CLEAR 	    	0xC 	5 (keypad without Num Lock)
+			KEYBOARD_BUTTON_ENTER,	   // VK_RETURN 	    0xD 	Enter
+			INPUT_BUTTON_UNSUPPORTED,  // - 	    		0xE 	Undefined
+			INPUT_BUTTON_UNSUPPORTED,  // - 	    		0xF 	Undefined
+			KEYBOARD_BUTTON_SHIFT,	   // VK_SHIFT 	    	0x10 	Shift (either one)
+			KEYBOARD_BUTTON_CTRL,	   // VK_CONTROL 	    0x11 	Ctrl (either one)
+			KEYBOARD_BUTTON_ALT,	   // VK_MENU 		    0x12 	Alt (either one)
+			INPUT_BUTTON_UNSUPPORTED,  // VK_PAUSE 	    	0x13 	Pause
+			KEYBOARD_BUTTON_CAPS,	   // VK_CAPITAL 	    0x14 	Caps Lock
+			INPUT_BUTTON_UNSUPPORTED,  // VK_HANGUEL		0x15 	IME Hanguel mode (maintained for compatibility; use VK_HANGUL)
+			INPUT_BUTTON_UNSUPPORTED,  // VK_IME_ON		 	0x16 	IME On
+			INPUT_BUTTON_UNSUPPORTED,  // VK_JUNJA		 	0x17 	IME Junja mode
+			INPUT_BUTTON_UNSUPPORTED,  // VK_FINAL		 	0x18 	IME final mode
+			INPUT_BUTTON_UNSUPPORTED,  // VK_HANJA		 	0x19 	IME Hanja mode
+			INPUT_BUTTON_UNSUPPORTED,  // VK_IME_OFF		0x1A 	IME Off
+			KEYBOARD_BUTTON_ESC,	   // VK_ESCAPE 	    0x1B 	Esc
+			INPUT_BUTTON_UNSUPPORTED,  // VK_CONVERT	 	0x1C 	IME convert
+			INPUT_BUTTON_UNSUPPORTED,  // VK_NONCONVERT	 	0x1D 	IME nonconvert
+			INPUT_BUTTON_UNSUPPORTED,  // VK_ACCEPT	 		0x1E 	IME accept
+			INPUT_BUTTON_UNSUPPORTED,  // VK_MODECHANGE	 	0x1F 	IME mode change request
+			KEYBOARD_BUTTON_SPACE,	   // VK_SPACE 	    	0x20 	Spacebar
+			INPUT_BUTTON_UNSUPPORTED,  // VK_PRIOR 	    	0x21 	Page Up
+			INPUT_BUTTON_UNSUPPORTED,  // VK_NEXT 		    0x22 	Page Down
+			INPUT_BUTTON_UNSUPPORTED,  // VK_END 		    0x23 	End
+			INPUT_BUTTON_UNSUPPORTED,  // VK_HOME 		    0x24 	Home
+			KEYBOARD_BUTTON_LEFT,	   // VK_LEFT 		    0x25 	Left Arrow
+			KEYBOARD_BUTTON_UP,		   // VK_UP 		    0x26 	Up Arrow
+			KEYBOARD_BUTTON_RIGHT,	   // VK_RIGHT 	    	0x27 	Right Arrow
+			KEYBOARD_BUTTON_DOWN,	   // VK_DOWN 		    0x28 	Down Arrow
+			INPUT_BUTTON_UNSUPPORTED,  // VK_SELECT 	    0x29 	Select
+			INPUT_BUTTON_UNSUPPORTED,  // VK_PRINT 	    	0x2A 	Print (only used by Nokia keyboards)
+			INPUT_BUTTON_UNSUPPORTED,  // VK_EXECUTE 	    0x2B 	Execute (not used)
+			INPUT_BUTTON_UNSUPPORTED,  // VK_SNAPSHOT 	    0x2C 	Print Screen
+			INPUT_BUTTON_UNSUPPORTED,  // VK_INSERT 	    0x2D 	Insert
+			INPUT_BUTTON_UNSUPPORTED,  // VK_DELETE 	    0x2E 	Delete
+			INPUT_BUTTON_UNSUPPORTED,  // VK_HELP 		    0x2F 	Help
+			KEYBOARD_BUTTON_0,		   // VK_0 		    	0x30 	0
+			KEYBOARD_BUTTON_1,		   // VK_1 		    	0x31 	1
+			KEYBOARD_BUTTON_2,		   // VK_2 		    	0x32 	2
+			KEYBOARD_BUTTON_3,		   // VK_3 		    	0x33 	3
+			KEYBOARD_BUTTON_4,		   // VK_4 		    	0x34 	4
+			KEYBOARD_BUTTON_5,		   // VK_5 		    	0x35 	5
+			KEYBOARD_BUTTON_6,		   // VK_6 		    	0x36 	6
+			KEYBOARD_BUTTON_7,		   // VK_7 		    	0x37 	7
+			KEYBOARD_BUTTON_8,		   // VK_8 		    	0x38 	8
+			KEYBOARD_BUTTON_9,		   // VK_9 		    	0x39 	9
+			INPUT_BUTTON_UNSUPPORTED,  // -					0x3A 	Undefined
+			INPUT_BUTTON_UNSUPPORTED,  // -					0x3B 	Undefined
+			INPUT_BUTTON_UNSUPPORTED,  // -					0x3C 	Undefined
+			INPUT_BUTTON_UNSUPPORTED,  // -					0x3D 	Undefined
+			INPUT_BUTTON_UNSUPPORTED,  // -					0x3E 	Undefined
+			INPUT_BUTTON_UNSUPPORTED,  // -					0x3F 	Undefined
+			INPUT_BUTTON_UNSUPPORTED,  // -					0x40 	Undefined
+			KEYBOARD_BUTTON_A,		   // VK_A 		    	0x41 	A
+			KEYBOARD_BUTTON_B,		   // VK_B 		    	0x42 	B
+			KEYBOARD_BUTTON_C,		   // VK_C 		    	0x43 	C
+			KEYBOARD_BUTTON_D,		   // VK_D 		    	0x44 	D
+			KEYBOARD_BUTTON_E,		   // VK_E 		    	0x45 	E
+			KEYBOARD_BUTTON_F,		   // VK_F 		    	0x46 	F
+			KEYBOARD_BUTTON_G,		   // VK_G 		    	0x47 	G
+			KEYBOARD_BUTTON_H,		   // VK_H 		    	0x48 	H
+			KEYBOARD_BUTTON_I,		   // VK_I 		    	0x49 	I
+			KEYBOARD_BUTTON_J,		   // VK_J 		    	0x4A 	J
+			KEYBOARD_BUTTON_K,		   // VK_K 		    	0x4B 	K
+			KEYBOARD_BUTTON_L,		   // VK_L 		    	0x4C 	L
+			KEYBOARD_BUTTON_M,		   // VK_M 		    	0x4D 	M
+			KEYBOARD_BUTTON_N,		   // VK_N 		    	0x4E 	N
+			KEYBOARD_BUTTON_O,		   // VK_O 		    	0x4F 	O
+			KEYBOARD_BUTTON_P,		   // VK_P 		    	0x50 	P
+			KEYBOARD_BUTTON_Q,		   // VK_Q 		    	0x51 	Q
+			KEYBOARD_BUTTON_R,		   // VK_R 		    	0x52 	R
+			KEYBOARD_BUTTON_S,		   // VK_S 		    	0x53 	S
+			KEYBOARD_BUTTON_T,		   // VK_T 		    	0x54 	T
+			KEYBOARD_BUTTON_U,		   // VK_U 		    	0x55 	U
+			KEYBOARD_BUTTON_V,		   // VK_V 		    	0x56 	V
+			KEYBOARD_BUTTON_W,		   // VK_W 		    	0x57 	W
+			KEYBOARD_BUTTON_X,		   // VK_X 		    	0x58 	X
+			KEYBOARD_BUTTON_Y,		   // VK_Y 		    	0x59 	Y
+			KEYBOARD_BUTTON_Z,		   // VK_Z 		    	0x5A 	Z
+			INPUT_BUTTON_UNSUPPORTED,  // VK_STARTKEY 	    0x5B 	Start Menu key
+			INPUT_BUTTON_UNSUPPORTED,  // VK_RWIN 			0x5C 	Right Windows key (Natural keyboard)
+			INPUT_BUTTON_UNSUPPORTED,  // VK_CONTEXTKEY    	0x5D 	Context Menu key
+			INPUT_BUTTON_UNSUPPORTED,  // -			    	0x5E 	Reserved
+			INPUT_BUTTON_UNSUPPORTED,  // VK_SLEEP 			0x5F 	Computer Sleep key
+			KEYBOARD_BUTTON_NUMPAD_0,  // VK_NUMPAD0 	    0x60 	0 (keypad with Num Lock)
+			KEYBOARD_BUTTON_NUMPAD_1,  // VK_NUMPAD1 	    0x61 	1 (keypad with Num Lock)
+			KEYBOARD_BUTTON_NUMPAD_2,  // VK_NUMPAD2 	    0x62 	2 (keypad with Num Lock)
+			KEYBOARD_BUTTON_NUMPAD_3,  // VK_NUMPAD3 	    0x63 	3 (keypad with Num Lock)
+			KEYBOARD_BUTTON_NUMPAD_4,  // VK_NUMPAD4 	    0x64 	4 (keypad with Num Lock)
+			KEYBOARD_BUTTON_NUMPAD_5,  // VK_NUMPAD5 	    0x65 	5 (keypad with Num Lock)
+			KEYBOARD_BUTTON_NUMPAD_6,  // VK_NUMPAD6 	    0x66 	6 (keypad with Num Lock)
+			KEYBOARD_BUTTON_NUMPAD_7,  // VK_NUMPAD7 	    0x67 	7 (keypad with Num Lock)
+			KEYBOARD_BUTTON_NUMPAD_8,  // VK_NUMPAD8 	    0x68 	8 (keypad with Num Lock)
+			KEYBOARD_BUTTON_NUMPAD_9,  // VK_NUMPAD9 	    0x69 	9 (keypad with Num Lock)
+			INPUT_BUTTON_UNSUPPORTED,  // VK_MULTIPLY 	    0x6A 	* (keypad)
+			INPUT_BUTTON_UNSUPPORTED,  // VK_ADD 		    0x6B 	+ (keypad)
+			INPUT_BUTTON_UNSUPPORTED,  // VK_SEPARATOR     	0x6C 	Separator (never generated by the keyboard)
+			INPUT_BUTTON_UNSUPPORTED,  // VK_SUBTRACT 	    0x6D 	- (keypad)
+			INPUT_BUTTON_UNSUPPORTED,  // VK_DECIMAL 	    0x6E 	. (keypad with Num Lock)
+			INPUT_BUTTON_UNSUPPORTED,  // VK_DIVIDE 	    0x6F 	/ (keypad)
+			KEYBOARD_BUTTON_F1,		   // VK_F1 		    0x70 	F1
+			KEYBOARD_BUTTON_F2,		   // VK_F2 		    0x71 	F2
+			KEYBOARD_BUTTON_F3,		   // VK_F3 		    0x72 	F3
+			KEYBOARD_BUTTON_F4,		   // VK_F4 		    0x73 	F4
+			KEYBOARD_BUTTON_F5,		   // VK_F5 		    0x74 	F5
+			KEYBOARD_BUTTON_F6,		   // VK_F6 		    0x75 	F6
+			KEYBOARD_BUTTON_F7,		   // VK_F7 		    0x76 	F7
+			KEYBOARD_BUTTON_F8,		   // VK_F8 		    0x77 	F8
+			KEYBOARD_BUTTON_F9,		   // VK_F9 		    0x78 	F9
+			KEYBOARD_BUTTON_F10,	   // VK_F10 		    0x79 	F10
+			KEYBOARD_BUTTON_F11,	   // VK_F11 		    0x7A 	F11
+			KEYBOARD_BUTTON_F12,	   // VK_F12 		    0x7B 	F12
+			INPUT_BUTTON_UNSUPPORTED,  // VK_F13 		    0x7C 	F13
+			INPUT_BUTTON_UNSUPPORTED,  // VK_F14 		    0x7D 	F14
+			INPUT_BUTTON_UNSUPPORTED,  // VK_F15 		    0x7E 	F15
+			INPUT_BUTTON_UNSUPPORTED,  // VK_F16 		    0x7F 	F16
+			INPUT_BUTTON_UNSUPPORTED,  // VK_F17 		    0x80 	F17
+			INPUT_BUTTON_UNSUPPORTED,  // VK_F18 		    0x81 	F18
+			INPUT_BUTTON_UNSUPPORTED,  // VK_F19 		    0x82 	F19
+			INPUT_BUTTON_UNSUPPORTED,  // VK_F20 		    0x83 	F20
+			INPUT_BUTTON_UNSUPPORTED,  // VK_F21 		    0x84 	F21
+			INPUT_BUTTON_UNSUPPORTED,  // VK_F22 		    0x85 	F22
+			INPUT_BUTTON_UNSUPPORTED,  // VK_F23 		    0x86 	F23
+			INPUT_BUTTON_UNSUPPORTED,  // VK_F24 		    0x87 	F24
+			INPUT_BUTTON_UNSUPPORTED,  // -		 		    0x88 	Unassigned
+			INPUT_BUTTON_UNSUPPORTED,  // -		 		    0x89 	Unassigned
+			INPUT_BUTTON_UNSUPPORTED,  // -		 		    0x8A 	Unassigned
+			INPUT_BUTTON_UNSUPPORTED,  // -		 		    0x8B 	Unassigned
+			INPUT_BUTTON_UNSUPPORTED,  // -		 		    0x8C 	Unassigned
+			INPUT_BUTTON_UNSUPPORTED,  // -		 		    0x8D 	Unassigned
+			INPUT_BUTTON_UNSUPPORTED,  // -		 		    0x8E 	Unassigned
+			INPUT_BUTTON_UNSUPPORTED,  // -		 		    0x8F 	Unassigned
+			INPUT_BUTTON_UNSUPPORTED,  // VK_NUMLOCK 	    0x90 	Num Lock
+			INPUT_BUTTON_UNSUPPORTED,  // VK_OEM_SCROLL    	0x91 	Scroll Lock
+			INPUT_BUTTON_UNSUPPORTED,  // -			    	0x92 	OEM specific
+			INPUT_BUTTON_UNSUPPORTED,  // -			    	0x93 	OEM specific
+			INPUT_BUTTON_UNSUPPORTED,  // -			    	0x94 	OEM specific
+			INPUT_BUTTON_UNSUPPORTED,  // -			    	0x95 	OEM specific
+			INPUT_BUTTON_UNSUPPORTED,  // -			    	0x96 	OEM specific
+			INPUT_BUTTON_UNSUPPORTED,  // -			    	0x97 	Unassigned
+			INPUT_BUTTON_UNSUPPORTED,  // -			    	0x98 	Unassigned
+			INPUT_BUTTON_UNSUPPORTED,  // -			    	0x99 	Unassigned
+			INPUT_BUTTON_UNSUPPORTED,  // -			    	0x9A 	Unassigned
+			INPUT_BUTTON_UNSUPPORTED,  // -			    	0x9B 	Unassigned
+			INPUT_BUTTON_UNSUPPORTED,  // -			    	0x9C 	Unassigned
+			INPUT_BUTTON_UNSUPPORTED,  // -			    	0x9D 	Unassigned
+			INPUT_BUTTON_UNSUPPORTED,  // -			    	0x9E 	Unassigned
+			INPUT_BUTTON_UNSUPPORTED,  // -			    	0x9F 	Unassigned
+			INPUT_BUTTON_UNSUPPORTED,  // VK_LSHIFT 		0xA0 	Left SHIFT key
+			INPUT_BUTTON_UNSUPPORTED,  // VK_RSHIFT 		0xA1 	Right SHIFT key
+			INPUT_BUTTON_UNSUPPORTED,  // VK_LCONTROL 		0xA2 	Left CONTROL key
+			INPUT_BUTTON_UNSUPPORTED,  // VK_RCONTROL 		0xA3 	Right CONTROL key
+			INPUT_BUTTON_UNSUPPORTED,  // VK_LMENU 			0xA4 	Left ALT key
+			INPUT_BUTTON_UNSUPPORTED,  // VK_RMENU 			0xA5 	Right ALT key
+			INPUT_BUTTON_UNSUPPORTED,  // VK_BROWSER_BACK 	0xA6 	Browser Back key
+			INPUT_BUTTON_UNSUPPORTED,  // VK_BROWSER_FORWARD 0xA7 	Browser Forward key
+			INPUT_BUTTON_UNSUPPORTED,  // VK_BROWSER_REFRESH 0xA8 	Browser Refresh key
+			INPUT_BUTTON_UNSUPPORTED,  // VK_BROWSER_STOP 	0xA9 	Browser Stop key
+			INPUT_BUTTON_UNSUPPORTED,  // VK_BROWSER_SEARCH 0xAA 	Browser Search key
+			INPUT_BUTTON_UNSUPPORTED,  // VK_BROWSER_FAVORITES 0xAB 	Browser Favorites key
+			INPUT_BUTTON_UNSUPPORTED,  // VK_BROWSER_HOME 	0xAC 	Browser Start and Home key
+			INPUT_BUTTON_UNSUPPORTED,  // VK_VOLUME_MUTE 	0xAD 	Volume Mute key
+			INPUT_BUTTON_UNSUPPORTED,  // VK_VOLUME_DOWN 	0xAE 	Volume Down key
+			INPUT_BUTTON_UNSUPPORTED,  // VK_VOLUME_UP 		0xAF 	Volume Up key
+			INPUT_BUTTON_UNSUPPORTED,  // VK_MEDIA_NEXT_TRACK 0xB0 	Next Track key
+			INPUT_BUTTON_UNSUPPORTED,  // VK_MEDIA_PREV_TRACK 0xB1 	Previous Track key
+			INPUT_BUTTON_UNSUPPORTED,  // VK_MEDIA_STOP 	0xB2 	Stop Media key
+			INPUT_BUTTON_UNSUPPORTED,  // VK_MEDIA_PLAY_PAUSE 0xB3 	Play/Pause Media key
+			INPUT_BUTTON_UNSUPPORTED,  // VK_LAUNCH_MAIL 	0xB4 	Start Mail key
+			INPUT_BUTTON_UNSUPPORTED,  // VK_LAUNCH_MEDIA_SELECT 0xB5 	Select Media key
+			INPUT_BUTTON_UNSUPPORTED,  // VK_LAUNCH_APP1 	0xB6 	Start Application 1 key
+			INPUT_BUTTON_UNSUPPORTED,  // VK_LAUNCH_APP2 	0xB7 	Start Application 2 key
+			INPUT_BUTTON_UNSUPPORTED,  // - 				0xB8 	Reserved
+			INPUT_BUTTON_UNSUPPORTED,  // - 				0xB9 	Reserved
+			INPUT_BUTTON_UNSUPPORTED,  // VK_OEM_1 	    	0xBA 	;
+			INPUT_BUTTON_UNSUPPORTED,  // VK_OEM_PLUS 	    0xBB 	=
+			INPUT_BUTTON_UNSUPPORTED,  // VK_OEM_COMMA     	0xBC 	,
+			INPUT_BUTTON_UNSUPPORTED,  // VK_OEM_MINUS     	0xBD 	-
+			INPUT_BUTTON_UNSUPPORTED,  // VK_OEM_PERIOD    	0xBE 	.
+			INPUT_BUTTON_UNSUPPORTED,  // VK_OEM_2 	    	0xBF 	/
+			INPUT_BUTTON_UNSUPPORTED,  // VK_OEM_3 	    	0xC0 	`
+			INPUT_BUTTON_UNSUPPORTED,  // - 				0xC1 	Reserved
+			INPUT_BUTTON_UNSUPPORTED,  // - 				0xC2 	Reserved
+			INPUT_BUTTON_UNSUPPORTED,  // - 				0xC3 	Reserved
+			INPUT_BUTTON_UNSUPPORTED,  // - 				0xC4 	Reserved
+			INPUT_BUTTON_UNSUPPORTED,  // - 				0xC5 	Reserved
+			INPUT_BUTTON_UNSUPPORTED,  // - 				0xC6 	Reserved
+			INPUT_BUTTON_UNSUPPORTED,  // - 				0xC7 	Reserved
+			INPUT_BUTTON_UNSUPPORTED,  // - 				0xC8 	Reserved
+			INPUT_BUTTON_UNSUPPORTED,  // - 				0xC9 	Reserved
+			INPUT_BUTTON_UNSUPPORTED,  // - 				0xCA 	Reserved
+			INPUT_BUTTON_UNSUPPORTED,  // - 				0xCB 	Reserved
+			INPUT_BUTTON_UNSUPPORTED,  // - 				0xCC 	Reserved
+			INPUT_BUTTON_UNSUPPORTED,  // - 				0xCD 	Reserved
+			INPUT_BUTTON_UNSUPPORTED,  // - 				0xCE 	Reserved
+			INPUT_BUTTON_UNSUPPORTED,  // - 				0xCF 	Reserved
+			INPUT_BUTTON_UNSUPPORTED,  // - 				0xD0 	Reserved
+			INPUT_BUTTON_UNSUPPORTED,  // - 				0xD1 	Reserved
+			INPUT_BUTTON_UNSUPPORTED,  // - 				0xD2 	Reserved
+			INPUT_BUTTON_UNSUPPORTED,  // - 				0xD3 	Reserved
+			INPUT_BUTTON_UNSUPPORTED,  // - 				0xD4 	Reserved
+			INPUT_BUTTON_UNSUPPORTED,  // - 				0xD5 	Reserved
+			INPUT_BUTTON_UNSUPPORTED,  // - 				0xD6 	Reserved
+			INPUT_BUTTON_UNSUPPORTED,  // - 				0xD7 	Reserved
+			INPUT_BUTTON_UNSUPPORTED,  // - 				0xD8	Unassigned
+			INPUT_BUTTON_UNSUPPORTED,  // - 				0xD9	Unassigned
+			INPUT_BUTTON_UNSUPPORTED,  // - 				0xDA	Unassigned
+			INPUT_BUTTON_UNSUPPORTED,  // VK_OEM_4 	    	0xDB 	[
+			INPUT_BUTTON_UNSUPPORTED,  // VK_OEM_5 	    	0xDC 	backslash
+			INPUT_BUTTON_UNSUPPORTED,  // VK_OEM_6 	    	0xDD 	]
+			INPUT_BUTTON_UNSUPPORTED,  // VK_OEM_7 	    	0xDE 	'
+			INPUT_BUTTON_UNSUPPORTED,  // VK_OEM_8 	    	0xDF 	(unknown)
+			INPUT_BUTTON_UNSUPPORTED,  // VK_ICO_F17 	    0xE0 	F17 on Olivetti extended keyboard (internal use only)
+			INPUT_BUTTON_UNSUPPORTED,  // VK_ICO_F18 	    0xE1 	F18 on Olivetti extended keyboard (internal use only)
+			INPUT_BUTTON_UNSUPPORTED,  // VK_OEM_102 	    0xE2 	< or | on IBM-compatible 102 enhanced non-U.S. keyboard
+			INPUT_BUTTON_UNSUPPORTED,  // VK_ICO_HELP 	    0xE3 	Help on Olivetti extended keyboard (internal use only)
+			INPUT_BUTTON_UNSUPPORTED,  // VK_ICO_00 	    0xE4 	00 on Olivetti extended keyboard (internal use only)
+			INPUT_BUTTON_UNSUPPORTED,  // VK_ICO_CLEAR     	0xE6 	Clear on Olivette extended keyboard (internal use only)
+			INPUT_BUTTON_UNSUPPORTED,  // - 				0xE8 	Unassigned
+			INPUT_BUTTON_UNSUPPORTED,  // VK_OEM_RESET     	0xE9 	Reset (Nokia keyboards only)
+			INPUT_BUTTON_UNSUPPORTED,  // VK_OEM_JUMP 	    0xEA 	Jump (Nokia keyboards only)
+			INPUT_BUTTON_UNSUPPORTED,  // VK_OEM_PA1 	    0xEB 	PA1 (Nokia keyboards only)
+			INPUT_BUTTON_UNSUPPORTED,  // VK_OEM_PA2 	    0xEC 	PA2 (Nokia keyboards only)
+			INPUT_BUTTON_UNSUPPORTED,  // VK_OEM_PA3 	    0xED 	PA3 (Nokia keyboards only)
+			INPUT_BUTTON_UNSUPPORTED,  // VK_OEM_WSCTRL    	0xEE 	WSCTRL (Nokia keyboards only)
+			INPUT_BUTTON_UNSUPPORTED,  // VK_OEM_CUSEL     	0xEF 	CUSEL (Nokia keyboards only)
+			INPUT_BUTTON_UNSUPPORTED,  // VK_OEM_ATTN 	    0xF0 	ATTN (Nokia keyboards only)
+			INPUT_BUTTON_UNSUPPORTED,  // VK_OEM_FINNISH	0xF1 	FINNISH (Nokia keyboards only)
+			INPUT_BUTTON_UNSUPPORTED,  // VK_OEM_COPY 	    0xF2 	COPY (Nokia keyboards only)
+			INPUT_BUTTON_UNSUPPORTED,  // VK_OEM_AUTO 	    0xF3 	AUTO (Nokia keyboards only)
+			INPUT_BUTTON_UNSUPPORTED,  // VK_OEM_ENLW 	    0xF4 	ENLW (Nokia keyboards only)
+			INPUT_BUTTON_UNSUPPORTED,  // VK_OEM_BACKTAB	0xF5 	BACKTAB (Nokia keyboards only)
+			INPUT_BUTTON_UNSUPPORTED,  // VK_ATTN 		    0xF6 	ATTN
+			INPUT_BUTTON_UNSUPPORTED,  // VK_CRSEL 	    	0xF7 	CRSEL
+			INPUT_BUTTON_UNSUPPORTED,  // VK_EXSEL 	    	0xF8 	EXSEL
+			INPUT_BUTTON_UNSUPPORTED,  // VK_EREOF 	    	0xF9 	EREOF
+			INPUT_BUTTON_UNSUPPORTED,  // VK_PLAY 		    0xFA 	PLAY
+			INPUT_BUTTON_UNSUPPORTED,  // VK_ZOOM 		    0xFB 	ZOOM
+			INPUT_BUTTON_UNSUPPORTED,  // VK_NONAME 	    0xFC 	NONAME
+			INPUT_BUTTON_UNSUPPORTED,  // VK_PA1 		    0xFD 	PA1
+			INPUT_BUTTON_UNSUPPORTED,  // VK_OEM_CLEAR     	0xFE 	CLEAR
+		};
+	}
+
 	LRESULT CALLBACK Win32PlatformProcessMessages(HWND handle, UINT message, WPARAM wParam, LPARAM lParam);
 
 	bool PlatformInitialize(platform_state *platformState, const char *appName, i32 width, i32 height)
@@ -48,7 +308,7 @@ namespace HY3D
 
 		if (!RegisterClassA(&windowClass))
 		{
-			LOG_FATAL("RegisterClassA failed to register window class");
+			LOG_ERROR("RegisterClassA failed to register window class");
 			return false;
 		}
 
@@ -83,7 +343,7 @@ namespace HY3D
 
 		if (!state->handle)
 		{
-			LOG_FATAL("CreateWindowA failed to create a handle.");
+			LOG_ERROR("CreateWindowA failed to create a handle.");
 			return false;
 		}
 
@@ -94,7 +354,7 @@ namespace HY3D
 		rid.hwndTarget = state->handle;
 		if (!RegisterRawInputDevices(&rid, 1, sizeof(rid)))
 		{
-			LOG_FATAL("RegisterRawInputDevices failed");
+			LOG_ERROR("RegisterRawInputDevices failed");
 			return false;
 		}
 
@@ -185,43 +445,36 @@ namespace HY3D
 			// WM_QUIT    -> Return false and exit message loop
 			case WM_QUIT:
 				return false;
-				// case WM_USER + 2: // WM_SIZE
-				// {
-				// 	engine.onResize = true;
-				// 	Win32GetWindowDim(window.handle, engine.windowWidth, engine.windowHeight);
-				// 	window.width = engine.windowWidth;
-				// 	window.height = engine.windowHeight;
-				// 	break;
-				// }
 
-				// //------------------------------------------------------------------------
-				// // KEYBOARD EVENTS
-				// //------------------------------------------------------------------------
-				// case WM_SYSKEYDOWN:
-				// case WM_KEYDOWN:
-				// {
-				// 	bool wasDown = ((message.lParam >> 30) & 1) != 0;
-				// 	if (!wasDown || input.keyboard.autoRepeatEnabled)
-				// 	{
-				// 		KEYBOARD_BUTTON key = Win32TranslateKeyInput((VK_CODE)message.wParam);
-				// 		if (key < KEY_COUNT)
-				// 			input.keyboard.ToggleKey(key);
-				// 	}
-				// 	if (input.keyboard.isPressed[KEY_F4] && input.keyboard.isPressed[KEY_ALT])
-				// 	{
-				// 		PostQuitMessage(0);
-				// 		return 0;
-				// 	}
-				// 	break;
-				// }
-				// case WM_SYSKEYUP:
-				// case WM_KEYUP:
-				// {
-				// 	KEYBOARD_BUTTON key = Win32TranslateKeyInput((VK_CODE)message.wParam);
-				// 	if (key < KEY_COUNT)
-				// 		input.keyboard.ToggleKey(key);
-				// 	break;
-				// }
+			// case WM_USER + 2: // WM_SIZE
+			// {
+			// 	engine.onResize = true;
+			// 	Win32GetWindowDim(window.handle, engine.windowWidth, engine.windowHeight);
+			// 	window.width = engine.windowWidth;
+			// 	window.height = engine.windowHeight;
+			// 	break;
+			// }
+			//------------------------------------------------------------------------
+			// KEYBOARD EVENTS
+			//------------------------------------------------------------------------
+			case WM_SYSKEYDOWN:
+			case WM_KEYDOWN:
+			{
+				InputProcessButton(Win32VkCode::toInputButton[message.wParam], true);
+
+				if (InputIsKeyPressed(KEYBOARD_BUTTON_F4) && InputIsKeyPressed(KEYBOARD_BUTTON_ALT))
+				{
+					PostQuitMessage(0);
+					return 0;
+				}
+				break;
+			}
+			case WM_SYSKEYUP:
+			case WM_KEYUP:
+			{
+				InputProcessButton(Win32VkCode::toInputButton[message.wParam], false);
+				break;
+			}
 
 				// //------------------------------------------------------------------------
 				// // MOUSE EVENTS
@@ -275,18 +528,24 @@ namespace HY3D
 			// 	// }
 			// 	break;
 			// }
-			// case WM_LBUTTONDOWN:
-			// 	input.mouse.leftIsPressed = true;
-			// 	break;
-			// case WM_RBUTTONDOWN:
-			// 	input.mouse.rightIsPressed = true;
-			// 	break;
-			// case WM_LBUTTONUP:
-			// 	input.mouse.leftIsPressed = false;
-			// 	break;
-			// case WM_RBUTTONUP:
-			// 	input.mouse.rightIsPressed = false;
-			// 	break;
+			case WM_LBUTTONDOWN:
+				InputProcessButton(Win32VkCode::toInputButton[VK_LBUTTON], true);
+				break;
+			case WM_RBUTTONDOWN:
+				InputProcessButton(Win32VkCode::toInputButton[VK_RBUTTON], true);
+				break;
+			case WM_MBUTTONDOWN:
+				InputProcessButton(Win32VkCode::toInputButton[VK_MBUTTON], true);
+				break;
+			case WM_LBUTTONUP:
+				InputProcessButton(Win32VkCode::toInputButton[VK_LBUTTON], false);
+				break;
+			case WM_RBUTTONUP:
+				InputProcessButton(Win32VkCode::toInputButton[VK_RBUTTON], false);
+				break;
+			case WM_MBUTTONUP:
+				InputProcessButton(Win32VkCode::toInputButton[VK_MBUTTON], false);
+				break;
 			// case WM_MOUSEWHEEL:
 			// 	input.mouse.UpdateWheelDelta(GET_WHEEL_DELTA_WPARAM(message.wParam));
 			// case WM_MOUSELEAVE:
@@ -415,7 +674,7 @@ namespace HY3D
 		return false;
 	}
 
-	void Win32GetWindowDim(HWND handle, u32 &width, u32 &height)
+	void Win32GetWindowDim(HWND handle, u32 &width, u32 height)
 	{
 		RECT rect = {};
 		GetWindowRect(handle, &rect);
@@ -427,8 +686,8 @@ namespace HY3D
 	void PlatformPrint(const char *message, u8 colour)
 	{
 		HANDLE console_handle = GetStdHandle(STD_OUTPUT_HANDLE);
-		// FATAL,ERROR,WARN,INFO,DEBUG,TRACE
-		static u8 levels[6] = {64, 4, 6, 2, 1, 8};
+		// ERROR, WARN, INFO, DEBUG
+		static u8 levels[] = {64, 6, 2, 1};
 		SetConsoleTextAttribute(console_handle, levels[colour]);
 		OutputDebugStringA(message);
 		size_t length = strlen(message);
@@ -440,8 +699,8 @@ namespace HY3D
 	void PlatformPrintError(const char *message, u8 colour)
 	{
 		HANDLE console_handle = GetStdHandle(STD_ERROR_HANDLE);
-		// FATAL,ERROR,WARN,INFO,DEBUG,TRACE
-		static u8 levels[6] = {64, 4, 6, 2, 1, 8};
+		// ERROR, WARN, INFO, DEBUG
+		static u8 levels[] = {64, 6, 2, 1};
 		SetConsoleTextAttribute(console_handle, levels[colour]);
 		OutputDebugStringA(message);
 		size_t length = strlen(message);
@@ -530,10 +789,10 @@ namespace HY3D
 		platformAPI->BindToLogger = PlatformBindToLogger;
 	}
 
-	void PlatformBindToLogger(logger_api *loggerAPI_)
+	void PlatformBindToLogger(logger_api *loggerAPI)
 	{
-		loggerAPI_->Print = PlatformPrint;
-		loggerAPI_->PrintError = PlatformPrintError;
+		loggerAPI->Print = PlatformPrint;
+		loggerAPI->PrintError = PlatformPrintError;
 	}
 
 #if 0

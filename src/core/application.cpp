@@ -13,7 +13,7 @@ namespace HY3D
 	{
 		if (Application::state.isInitialized)
 		{
-			LOG_ERROR("Application '%s' is already initialized", appInfo->name)
+			LOG_ERROR("Application '%s' is already initialized", appInfo->name);
 			return false;
 		}
 

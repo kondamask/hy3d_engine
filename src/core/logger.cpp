@@ -8,14 +8,14 @@ namespace HY3D
 #include <stdio.h>
 #include <string.h>
 
-	namespace Logger
-	{
-		global_var logger_api API;
-	}
 	void LogOutput(log_level level, const char *message, ...)
 	{
-		const char *level_strings[6] = {"[FATAL]: ", "[ERROR]: ", "[WARN]:  ", "[INFO]:  ", "[DEBUG]: ", "[TRACE]: "};
-		bool is_error = level < LOG_LEVEL_WARN;
+		const char *level_strings[6] = {
+			"[ERROR]: ",
+			"[WARN]:  ",
+			"[INFO]:  ",
+			"[DEBUG]: ",
+		};
 
 		// Technically imposes a 32k character limit on a single log entry, but...
 		// DON'T DO THAT!
@@ -36,7 +36,7 @@ namespace HY3D
 		sprintf(out_message2, "%s%s\n", level_strings[level], out_message);
 
 #if 1
-		if (is_error)
+		if (level == LOG_LEVEL_ERROR)
 			Logger::API.PrintError(out_message2, (u8)level);
 		else
 			Logger::API.Print(out_message2, (u8)level);

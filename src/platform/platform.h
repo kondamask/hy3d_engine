@@ -4,6 +4,7 @@
 #include "core/utils.h"
 #include "core/ASSERT.h"
 #include "core/logger.h"
+#include "core/input.h"
 #include "defines.h"
 
 namespace HY3D
@@ -54,6 +55,6 @@ namespace HY3D
 		read_file_result (*ReadFile)(const char *filepath);
 	};
 	void PlatformBindToEngine(platform_api *platformAPI);
-	void PlatformBindToLogger(logger_api *loggerAPI_);
+	void PlatformBindToLogger(logger_api *loggerAPI);
 }
 #endif // INCLUDE_PLATFORM_H
