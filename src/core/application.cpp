@@ -11,48 +11,48 @@ namespace HY3D
 
 	bool ApplicationInitialize(application_config *appInfo)
 	{
-		if (appState.isInitialized)
+		if (Application::state.isInitialized)
 		{
 			LOG_ERROR("Application '%s' is already initialized", appInfo->name)
 			return false;
 		}
 
-		if (!PlatformInitialize(&appState.platformState, appInfo->name, appInfo->width, appInfo->height))
+		if (!PlatformInitialize(&Application::state.platformState, appInfo->name, appInfo->width, appInfo->height))
 		{
 			return false;
 		}
-		PlatformBindToLogger(&loggerAPI);
+		PlatformBindToLogger(&Logger::API);
 
 		dynamic_library engineLibrary = {};
 		if (PlatformLoadDynamicLibrary(ENGINE_DLL, &engineLibrary))
 		{
-			appState.engine.Initialize = (pfnEngineInitialize)PlatformGetDynamicLibraryFunction(&engineLibrary, "EngineInitialize");
-			appState.engine.Update = (pfnEngineUpdate)PlatformGetDynamicLibraryFunction(&engineLibrary, "EngineUpdate");
-			appState.engine.Render = (pfnEngineRender)PlatformGetDynamicLibraryFunction(&engineLibrary, "EngineRender");
-			appState.engine.Terminate = (pfnEngineTerminate)PlatformGetDynamicLibraryFunction(&engineLibrary, "EngineTerminate");
+			Application::state.engine.Initialize = (pfnEngineInitialize)PlatformGetDynamicLibraryFunction(&engineLibrary, "EngineInitialize");
+			Application::state.engine.Update = (pfnEngineUpdate)PlatformGetDynamicLibraryFunction(&engineLibrary, "EngineUpdate");
+			Application::state.engine.Render = (pfnEngineRender)PlatformGetDynamicLibraryFunction(&engineLibrary, "EngineRender");
+			Application::state.engine.Terminate = (pfnEngineTerminate)PlatformGetDynamicLibraryFunction(&engineLibrary, "EngineTerminate");
 		}
-		EngineValidateAPI(&appState.engine);
+		EngineValidateAPI(&Application::state.engine);
 
-		PlatformBindToEngine(&appState.engine.platformAPI);
+		PlatformBindToEngine(&Application::state.engine.platformAPI);
 
-		appState.engine.Initialize(&appState.engine);
+		Application::state.engine.Initialize(&Application::state.engine);
 
 		return true;
 	}
 
 	bool ApplicationRun()
 	{
-		while (PlatformProcessMessages(&appState.platformState))
+		while (PlatformProcessMessages(&Application::state.platformState))
 		{
-			if (!appState.isSuspended)
+			if (!Application::state.isSuspended)
 			{
-				appState.engine.Update();
-				appState.engine.Render();
+				Application::state.engine.Update();
+				Application::state.engine.Render();
 			}
 		}
 
-		appState.engine.Terminate();
-		PlatformTerminate(&appState.platformState);
+		Application::state.engine.Terminate();
+		PlatformTerminate(&Application::state.platformState);
 
 		return true;
 	}

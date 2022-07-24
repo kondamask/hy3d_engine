@@ -6,16 +6,19 @@
 
 namespace HY3D
 {
-	global_var platform_api *platformAPI;
+	namespace Platform
+	{
+		global_var platform_api *API;
+	}
 
 	EngineInitializeSignature(EngineInitialize)
 	{
-		platformAPI = &engine->platformAPI;
+		Platform::API = &engine->platformAPI;
 
 		// NOTE: We are only doing this because the logger uses special Platform specific functions
 		// to print to the console, so we need to set the function pointers sinces the engine does
 		// not know anything about the platform
-		platformAPI->BindToLogger(&loggerAPI);
+		Platform::API->BindToLogger(&Logger::API);
 
 		LOG_DEBUG(__FUNCTION__);
 	}

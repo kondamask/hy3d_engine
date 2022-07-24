@@ -23,7 +23,11 @@ namespace HY3D
 		i32 height;
 		platform_state platformState;
 	};
-	global_var application_state appState;
+
+	namespace Application
+	{
+		global_var application_state state;
+	}
 
 	bool ApplicationInitialize(application_config *appInfo);
 	bool ApplicationRun();
