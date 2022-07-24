@@ -29,7 +29,7 @@ SET SRC=.\..\..\src
 
 REM COMPILER OPTIONS
 SET CFlags=-EHsc -FC -fp:except- -fp:fast -Gm- -GS- -nologo -Oi -WL %ModeFlags%
-SET Defines=-D_CRT_SECURE_NO_WARNINGS
+SET Defines=-D_CRT_SECURE_NO_WARNINGS -DHY3D_EXPORT
 SET Includes=/I %SRC%
 SET Warnings=-W4 -wd4100 -wd4458 -wd4505 -wd4201
 SET AppName=hy3d_engine
@@ -37,18 +37,24 @@ SET COptions=%CFlags% %Defines% %Includes% %Warnings% %MODE%
 
 REM LINKER OPTIONS
 SET LFlags=-incremental:no -opt:ref
-SET Libraries=user32.lib gdi32.lib
-SET LOptions=%LFlags% %Libraries%
+SET Libraries=user32.lib gdi32.lib core.lib win32_platform.lib
 
 DEL *.pdb > NUL 2> NUL
 
-REM BUILD WINDOWS RESOURCE
-rc /fo win32_hy3d.res /nologo %SRC%\platform\win32\resource.rc
-SET COptions=%COptions% win32_hy3d.res
+REM Core
+cl /c %COptions% %SRC%\core\core.cpp
+lib /nologo core.obj
 
-cl %COptions% %SRC%\engine\engine.cpp  -LD -link %LFlags% -PDB:engine_%RANDOM%.pdb
+REM Windows Platform
+REM rc /fo win32_hy3d.res /nologo %SRC%\platform\win32\resource.rc
+cl /c %COptions% %SRC%\platform\win32\win32_platform.cpp
+lib /nologo win32_platform.obj 
 
-cl %COptions% %SRC%\main.cpp %SRC%\platform\win32\win32_platform.cpp %SRC%\core\core.cpp -Fe%AppName% -link %LOptions%
+REM Engine
+cl %COptions% %SRC%\engine\engine.cpp -LD -link %LFlags% %Libraries% -PDB:engine_%RANDOM%.pdb
+
+REM Main Application
+cl %COptions% %SRC%\main.cpp win32_hy3d.res -Fe%AppName% -link %LFlags% %Libraries%
 POPD
 
 ECHO ----------------------------------------------------------------------------

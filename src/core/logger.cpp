@@ -37,9 +37,9 @@ namespace HY3D
 
 #if 1
 		if (level == LOG_LEVEL_ERROR)
-			Logger::API.PrintError(out_message2, (u8)level);
+			PlatformPrintError(out_message2, (u8)level);
 		else
-			Logger::API.Print(out_message2, (u8)level);
+			PlatformPrint(out_message2, (u8)level);
 #else
 		printf(out_message2);
 #endif

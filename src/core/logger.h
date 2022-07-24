@@ -28,11 +28,6 @@ namespace HY3D
 		void (*PrintError)(const char *message, u8 colour);
 	};
 
-	namespace Logger
-	{
-		global_var logger_api API;
-	}
-
 	void LogOutput(log_level level, const char *message, ...);
 
 #define LOG_ERROR(message, ...) LogOutput(LOG_LEVEL_ERROR, message, ##__VA_ARGS__)

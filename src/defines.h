@@ -55,7 +55,6 @@ typedef double f64;
 #error "Unknown platform!"
 #endif
 
-#define HY3D_EXPORT
 #ifdef HY3D_EXPORT
 // Exports
 #ifdef _MSC_VER

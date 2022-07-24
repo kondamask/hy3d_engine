@@ -21,7 +21,6 @@ namespace HY3D
 		{
 			return false;
 		}
-		PlatformBindToLogger(&Logger::API);
 
 		dynamic_library engineLibrary = {};
 		if (PlatformLoadDynamicLibrary(ENGINE_DLL, &engineLibrary))
@@ -33,9 +32,7 @@ namespace HY3D
 		}
 		EngineValidateAPI(&Application::state.engine);
 
-		PlatformBindToEngine(&Application::state.engine.platformAPI);
-
-		Application::state.engine.Initialize(&Application::state.engine);
+		Application::state.engine.Initialize();
 
 		return true;
 	}

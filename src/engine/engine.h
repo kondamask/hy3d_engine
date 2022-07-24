@@ -8,15 +8,13 @@ namespace HY3D
 {
 	struct engine
 	{
-		void (*Initialize)(engine *engine);
+		void (*Initialize)();
 		void (*Update)();
 		void (*Render)();
 		void (*Terminate)();
-
-		platform_api platformAPI;
 	};
 
-#define EngineInitializeSignature(name) void name(engine *engine)
+#define EngineInitializeSignature(name) void name()
 	extern "C" HY3D_API EngineInitializeSignature(EngineInitialize);
 	typedef EngineInitializeSignature(_EngineInitialize);
 #define pfnEngineInitialize _EngineInitialize *

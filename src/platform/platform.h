@@ -46,15 +46,5 @@ namespace HY3D
 	bool PlatformLoadDynamicLibrary(const char *filepath, dynamic_library *libOut);
 	void *PlatformGetDynamicLibraryFunction(dynamic_library *lib, const char *function);
 	bool PlatformUnloadDynamicLibrary(dynamic_library *lib);
-
-	// NOTE: We have a struct of function pointer pointing to the plaform specific api functions
-	// We do this so that we can call to these functions from the engine.
-	struct platform_api
-	{
-		void (*BindToLogger)(logger_api *loggerAPI);
-		read_file_result (*ReadFile)(const char *filepath);
-	};
-	void PlatformBindToEngine(platform_api *platformAPI);
-	void PlatformBindToLogger(logger_api *loggerAPI);
 }
 #endif // INCLUDE_PLATFORM_H
