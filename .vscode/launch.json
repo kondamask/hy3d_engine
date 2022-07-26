@@ -24,8 +24,8 @@
             "args": [],
             "cwd": "${workspaceFolder}",
             "environment": [],
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "preLaunchTask": "Build All - Release Mode"
         }
-    ],
-    "compounds": []
+    ]
 }

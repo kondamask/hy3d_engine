@@ -1,7 +1,7 @@
 {
     "tasks": [
         {
-            "label": "Build Debug",
+            "label": "Build All - Debug Mode",
             "type": "shell",
             "windows": {
                 "command": "./build Debug",
@@ -14,7 +14,30 @@
             ],
             "group": {
                 "kind": "build",
-                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": true,
+            },
+        },
+        {
+            "label": "Build Engine - Debug Mode",
+            "type": "shell",
+            "windows": {
+                "command": "./build Debug Engine",
+            },
+            "options": {
+                "cwd": "${workspaceFolder}",
+            },
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": {
+                "kind": "build",
             },
             "presentation": {
                 "echo": true,
@@ -26,7 +49,7 @@
             }
         },
         {
-            "label": "Build Release",
+            "label": "Build All - Release Mode",
             "type": "shell",
             "windows": {
                 "command": "./build Release",

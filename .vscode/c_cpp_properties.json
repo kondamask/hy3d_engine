@@ -7,13 +7,30 @@
             ],
             "defines": [
                 "_DEBUG",
-                "HY3D_EXPORT"
+                "HY3D_EXPORT",
+                "_CRT_SECURE_NO_WARNINGS"
             ],
             "windowsSdkVersion": "10.0.19041.0",
             "compilerPath": "D:/.DEV/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.31.31103/bin/Hostx64/x64/cl.exe",
             "cStandard": "c11",
             "cppStandard": "c++11",
-            "intelliSenseMode": "windows-msvc-x64"
+            "intelliSenseMode": "windows-msvc-x64",
+            "compilerArgs": [
+                "-EHsc",
+                "-FC",
+                "-fp:except-",
+                "-fp:fast",
+                "-Gm-",
+                "-GS-",
+                "-nologo",
+                "-Oi",
+                "-WL",
+                "-W4",
+                "-wd4100",
+                "-wd4458",
+                "-wd4505",
+                "-wd4201"
+            ]
         }
     ],
     "version": 4
