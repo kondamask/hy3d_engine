@@ -687,7 +687,6 @@ namespace HY3D
 		// ERROR, WARN, INFO, DEBUG
 		static u8 levels[] = {64, 6, 2, 1};
 		SetConsoleTextAttribute(console_handle, levels[colour]);
-		OutputDebugStringA(message);
 		size_t length = strlen(message);
 		LPDWORD number_written = 0;
 		WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), message, (DWORD)length, number_written, 0);
@@ -700,7 +699,6 @@ namespace HY3D
 		// ERROR, WARN, INFO, DEBUG
 		static u8 levels[] = {64, 6, 2, 1};
 		SetConsoleTextAttribute(console_handle, levels[colour]);
-		OutputDebugStringA(message);
 		size_t length = strlen(message);
 		LPDWORD number_written = 0;
 		WriteConsoleA(GetStdHandle(STD_ERROR_HANDLE), message, (DWORD)length, number_written, 0);
