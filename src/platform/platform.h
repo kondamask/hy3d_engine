@@ -49,9 +49,8 @@ namespace HY3D
 		void *data; // ptr to os specific data
 	};
 	bool PlatformLoadDynamicLibrary(const char *filepath, dynamic_library *libOut);
-	void *PlatformGetDynamicLibraryFunction(dynamic_library *lib, const char *function);
 	bool PlatformUnloadDynamicLibrary(dynamic_library *lib);
+	void *PlatformGetDynamicLibraryFunction(dynamic_library *lib, const char *function);
 	bool PlatformUpdatedDynamicLibrary(dynamic_library *lib);
-	bool PlatformReloadDynamicLibrary(dynamic_library *lib);
 }
 #endif // INCLUDE_PLATFORM_H

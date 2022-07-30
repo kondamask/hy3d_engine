@@ -1,5 +1,6 @@
 #include "application.h"
 #include "engine/engine_loader.cpp"
+#include "renderer/renderer_loader.cpp"
 
 namespace HY3D
 {
@@ -16,9 +17,11 @@ namespace HY3D
 			return false;
 		}
 
-		EngineLoadCode(&Application::state.engine, &Application::state.engineLibrary);
+		EngineLoadCode(&Application::state.engine);
+		RendererLoadCode(&Application::state.renderer, RENDERER_API_VULKAN);
 
 		Application::state.engine.Initialize();
+		Application::state.renderer.Initialize();
 
 		return true;
 	}
@@ -31,12 +34,20 @@ namespace HY3D
 
 		while (PlatformProcessMessages(&Application::state.platformState))
 		{
-			EngineReloadCode(&Application::state.engine, &Application::state.engineLibrary);
+			if (PlatformUpdatedDynamicLibrary(&Application::state.engine.library))
+				EngineLoadCode(&Application::state.engine);
+				
+			if (PlatformUpdatedDynamicLibrary(&Application::state.renderer.library))
+				RendererLoadCode(&Application::state.renderer,  RENDERER_API_VULKAN);
 
 			if (!Application::state.isSuspended)
 			{
 				Application::state.engine.Update(frameDt);
 				Application::state.engine.Render(frameDt);
+
+				render_packet packet;
+				packet.dt = frameDt;
+				Application::state.renderer.DrawFrame(&packet);
 
 				frameEnd = PlatformGetTime();
 				frameDt = frameEnd - frameStart;
@@ -51,6 +62,7 @@ namespace HY3D
 			}
 		}
 
+		Application::state.renderer.Terminate();
 		Application::state.engine.Terminate();
 		PlatformTerminate(&Application::state.platformState);
 

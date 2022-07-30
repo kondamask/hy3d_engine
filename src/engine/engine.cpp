@@ -3,20 +3,21 @@
 
 namespace HY3D
 {
-	EngineInitializeSignature(EngineInitialize)
+	extern "C" HY3D_API EngineInitializeSignature(EngineInitialize)
 	{
 		LOG_DEBUG(__FUNCTION__);
+		return true;
 	}
 
-	EngineUpdateSignature(EngineUpdate)
+	extern "C" HY3D_API EngineUpdateSignature(EngineUpdate)
 	{
 	}
 
-	EngineRenderSignature(EngineRender)
+	extern "C" HY3D_API EngineRenderSignature(EngineRender)
 	{
 	}
 
-	EngineTerminateSignature(EngineTerminate)
+	extern "C" HY3D_API EngineTerminateSignature(EngineTerminate)
 	{
 		LOG_DEBUG(__FUNCTION__);
 	}

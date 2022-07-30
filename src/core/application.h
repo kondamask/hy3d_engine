@@ -4,6 +4,7 @@
 #include "defines.h"
 #include "platform/platform.h"
 #include "engine/engine.h"
+#include "renderer/renderer.h"
 
 namespace HY3D
 {
@@ -20,13 +21,12 @@ namespace HY3D
 	struct application_state
 	{
 		engine engine;
+		renderer renderer;
 		bool isInitialized;
 		bool isSuspended;
 		i32 width;
 		i32 height;
 		platform_state platformState;
-
-		dynamic_library engineLibrary;
 	};
 
 	namespace Application

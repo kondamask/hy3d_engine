@@ -1,19 +1,19 @@
 @echo off
 
-ECHO -------------------------------------------------------------------------------------
+ECHO ------------------------------------------------------------------------------------
 
 ctime -begin hy3d_engine_build_time.ctm
 
-@REM -------------------------------------------------------------------------------------
+@REM ------------------------------------------------------------------------------------
 
 SET AppName=hy3d_engine
 
-@REM Build Mode --------------------------------------------------------------------------
+@REM Build Mode -------------------------------------------------------------------------
 
 IF [%1] == [] (
 	ECHO Enter build mode: Debug or Release
 	ECHO Example: build Debug
-	GOTO :EOF
+	GOTO :BUILD_DONE
 )
 
 IF %1 == Debug (
@@ -33,7 +33,7 @@ IF NOT EXIST %OutputPath% MKDIR %OutputPath%
 PUSHD %OutputPath%
 SET SRC=..\..\src
 
-@REM Common Flags ------------------------------------------------------------------------
+@REM Common Flags -----------------------------------------------------------------------
 
 SET CompilerFlags=-EHsc -FC -fp:except- -fp:fast -Gm- -GS- -nologo -Oi -WL %ModeFlags%
 SET Defines=-D_CRT_SECURE_NO_WARNINGS  -DHY3D_EXPORT
@@ -47,49 +47,73 @@ SET OBJs=all.obj
 SET CommonCompilerOptions=%CompilerFlags% %Defines% %Includes% %Warnings%
 SET CommonLinkerOptions=%LinkerFlags% %LIBs% %OBJs%
 
-@REM Build Targets -----------------------------------------------------------------------
+@REM Build Targets ----------------------------------------------------------------------
+
+SET BUILD_SINGLE=0
 
 IF [%2] == [] (
 	ECHO Building All...
 	GOTO :BUILD_ALL
 )
-
 IF %2 == Engine (
 	ECHO Building Engine...
+	SET BUILD_SINGLE=1
 	GOTO :BUILD_ENGINE
 )
+IF %2 == Renderer (
+	ECHO Building Renderer...
+	SET BUILD_SINGLE=1
+	GOTO :BUILD_RENDERER
+)
 
-@REM -------------------------------------------------------------------------------------
+@REM ------------------------------------------------------------------------------------
 :BUILD_ALL
 DEL *.pdb > NUL 2> NUL
 
-@REM All Cpps ----------------------------------------------------------------------------
+@REM All Cpps ---------------------------------------------------------------------------
 cl	/c ^
 	%CommonCompilerOptions% ^
 	%SRC%\all.cpp
 
-@REM Windows Resource --------------------------------------------------------------------
+@REM Windows Resource -------------------------------------------------------------------
 rc	/nologo ^
 	/fo win32_hy3d.res ^
 	%SRC%\platform\win32\resource.rc
 
-@REM App Entry  --------------------------------------------------------------------------
+@REM App Entry --------------------------------------------------------------------------
 cl	%CommonCompilerOptions% ^
 	%SRC%\main.cpp win32_hy3d.res ^
 	-Fe%AppName% ^
-	-link ^
+-link ^
 	%CommonLinkerOptions%
 
+:BUILD_RENDERER
+@REM Renderer  ---------------------------------------------------------------------------
+cl	-LD ^
+	%CommonCompilerOptions% ^
+	%SRC%\renderer\vulkan\vulkan_renderer.cpp ^
+-link ^
+	%CommonLinkerOptions% ^
+	-PDB:renderer_%RANDOM%.pdb
+IF %BUILD_SINGLE% == 1 (
+	GOTO :BUILD_DONE
+)
+
 :BUILD_ENGINE
-@REM Engine
+@REM Engine -----------------------------------------------------------------------------
 cl	-LD ^
 	%CommonCompilerOptions% ^
 	%SRC%\engine\engine.cpp ^
-	-link ^
+-link ^
 	%CommonLinkerOptions% ^
 	-PDB:engine_%RANDOM%.pdb
+IF %BUILD_SINGLE% == 1 (
+	GOTO :BUILD_DONE
+)
 
 POPD
+
+:BUILD_DONE
 
 ECHO -------------------------------------------------------------------------------------
 

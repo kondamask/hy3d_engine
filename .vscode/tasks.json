@@ -6,23 +6,7 @@
             "windows": {
                 "command": "./build Debug",
             },
-            "options": {
-                "cwd": "${workspaceFolder}",
-            },
-            "problemMatcher": [
-                "$msCompile"
-            ],
-            "group": {
-                "kind": "build",
-            },
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared",
-                "showReuseMessage": false,
-                "clear": true,
-            },
+            "group": "build"
         },
         {
             "label": "Build Engine - Debug Mode",
@@ -30,23 +14,15 @@
             "windows": {
                 "command": "./build Debug Engine",
             },
-            "options": {
-                "cwd": "${workspaceFolder}",
+            "group": "build"
+        },
+        {
+            "label": "Build Renderer - Debug Mode",
+            "type": "shell",
+            "windows": {
+                "command": "./build Debug Renderer",
             },
-            "problemMatcher": [
-                "$msCompile"
-            ],
-            "group": {
-                "kind": "build",
-            },
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared",
-                "showReuseMessage": false,
-                "clear": true,
-            }
+            "group": "build"
         },
         {
             "label": "Build All - Release Mode",
@@ -54,24 +30,19 @@
             "windows": {
                 "command": "./build Release",
             },
-            "options": {
-                "cwd": "${workspaceFolder}",
-            },
-            "problemMatcher": [
-                "$msCompile"
-            ],
-            "group": {
-                "kind": "build",
-            },
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared",
-                "showReuseMessage": false,
-                "clear": true,
-            }
+            "group": "build"
         },
     ],
-    "version": "2.0.0"
+    "version": "2.0.0",
+    "problemMatcher": [
+        "$msCompile"
+    ],
+    "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true,
+    },
 }

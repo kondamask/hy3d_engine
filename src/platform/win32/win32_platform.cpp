@@ -728,8 +728,9 @@ namespace HY3D
 
 	bool PlatformLoadDynamicLibrary(const char* filepath, dynamic_library* libOut)
 	{
-		strcpy(libOut->name, filepath);
+		PlatformUnloadDynamicLibrary(libOut);
 
+		strcpy(libOut->name, filepath);
 		libOut->data = new win32_dll;
 		win32_dll* dll = (win32_dll*)libOut->data;
 
@@ -779,6 +780,22 @@ namespace HY3D
 		return false;
 	}
 
+	bool PlatformUnloadDynamicLibrary(dynamic_library* lib)
+	{
+		if (!lib->data) return true;
+
+		win32_dll* dll = (win32_dll*)lib->data;
+		if (dll->dll)
+		{
+			FreeLibrary(dll->dll);
+			if (lib->writeTime.data)
+				free(lib->writeTime.data);
+			delete dll;
+			return true;
+		}
+		return false;
+	}
+
 	void* PlatformGetDynamicLibraryFunction(dynamic_library* lib, const char* function)
 	{
 		void* result = 0;
@@ -793,20 +810,6 @@ namespace HY3D
 			}
 		}
 		return result;
-	}
-
-	bool PlatformUnloadDynamicLibrary(dynamic_library* lib)
-	{
-		win32_dll* dll = (win32_dll*)lib->data;
-		if (dll->dll)
-		{
-			FreeLibrary(dll->dll);
-			if (lib->writeTime.data)
-				free(lib->writeTime.data);
-			delete dll;
-			return true;
-		}
-		return false;
 	}
 
 	bool PlatformUpdatedDynamicLibrary(dynamic_library* lib)
@@ -827,19 +830,6 @@ namespace HY3D
 		if (newWriteTime.data)
 			free(newWriteTime.data);
 		return result;
-	}
-
-	bool PlatformReloadDynamicLibrary(dynamic_library* lib)
-	{
-		if (PlatformUpdatedDynamicLibrary(lib))
-		{
-			PlatformUnloadDynamicLibrary(lib);
-			PlatformLoadDynamicLibrary(lib->name, lib);
-
-			LOG_DEBUG("Reloaded '%s", lib->name);
-			return true;
-		}
-		return false;
 	}
 
 #if 0

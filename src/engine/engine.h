@@ -6,8 +6,7 @@
 
 namespace HY3D
 {
-#define EngineInitializeSignature(name) void name()
-	extern "C" HY3D_API EngineInitializeSignature(EngineInitialize);
+#define EngineInitializeSignature(name) bool name()
 	typedef EngineInitializeSignature(_EngineInitialize);
 #define pfnEngineInitialize _EngineInitialize *
 
@@ -17,17 +16,17 @@ namespace HY3D
 #define pfnEngineUpdate _EngineUpdate *
 
 #define EngineRenderSignature(name) void name(f64 dt)
-	extern "C" HY3D_API EngineRenderSignature(EngineRender);
 	typedef EngineRenderSignature(_EngineRender);
 #define pfnEngineRender _EngineRender *
 
 #define EngineTerminateSignature(name) void name()
-	extern "C" HY3D_API EngineTerminateSignature(EngineTerminate);
 	typedef EngineTerminateSignature(_EngineTerminate);
 #define pfnEngineTerminate _EngineTerminate *
 
 	struct engine
 	{
+		dynamic_library library;
+
 		pfnEngineInitialize Initialize;
 		pfnEngineUpdate Update;
 		pfnEngineRender Render;

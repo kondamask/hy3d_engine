@@ -6,6 +6,7 @@ namespace HY3D
 	EngineInitializeSignature(EngineInitializeSTUB)
 	{
 		LOG_DEBUG("Called Stub Function '%s'", __FUNCTION__);
+		return false;
 	}
 
 	EngineUpdateSignature(EngineUpdateSTUB)
@@ -28,21 +29,21 @@ namespace HY3D
 #else
 #define ENGINE_DLL "bin\\Release\\engine.dll"
 #endif
-	void EngineLoadCode(engine *engine, dynamic_library *lib)
+	void EngineLoadCode(engine *engine)
 	{
-		if (PlatformLoadDynamicLibrary(ENGINE_DLL, lib))
+		if (PlatformLoadDynamicLibrary(ENGINE_DLL, &engine->library))
 		{
 			engine->Initialize =
-				(pfnEngineInitialize)PlatformGetDynamicLibraryFunction(lib, "EngineInitialize");
+				(pfnEngineInitialize)PlatformGetDynamicLibraryFunction(&engine->library, "EngineInitialize");
 
 			engine->Update =
-				(pfnEngineUpdate)PlatformGetDynamicLibraryFunction(lib, "EngineUpdate");
+				(pfnEngineUpdate)PlatformGetDynamicLibraryFunction(&engine->library, "EngineUpdate");
 
 			engine->Render =
-				(pfnEngineRender)PlatformGetDynamicLibraryFunction(lib, "EngineRender");
+				(pfnEngineRender)PlatformGetDynamicLibraryFunction(&engine->library, "EngineRender");
 
 			engine->Terminate =
-				(pfnEngineTerminate)PlatformGetDynamicLibraryFunction(lib, "EngineTerminate");
+				(pfnEngineTerminate)PlatformGetDynamicLibraryFunction(&engine->library, "EngineTerminate");
 		}
 
 		if (!engine->Initialize)
@@ -53,14 +54,5 @@ namespace HY3D
 			engine->Render = EngineRenderSTUB;
 		if (!engine->Terminate)
 			engine->Terminate = EngineTerminateSTUB;
-	}
-
-	void EngineReloadCode(engine *engine, dynamic_library *lib)
-	{
-		if (PlatformUpdatedDynamicLibrary(lib))
-		{
-			PlatformUnloadDynamicLibrary(lib);
-			EngineLoadCode(engine, lib);
-		}
 	}
 }
