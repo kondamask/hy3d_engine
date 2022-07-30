@@ -7,11 +7,14 @@
 
 namespace HY3D
 {
+#define LIMIT_FRAMES 0
+#define TARGET_FPS 60.0
+
 	struct application_config
 	{
 		i32 width;
 		i32 height;
-		const char *name;
+		const char* name;
 	};
 
 	struct application_state
@@ -31,7 +34,7 @@ namespace HY3D
 		global_var application_state state;
 	}
 
-	bool ApplicationInitialize(application_config *appInfo);
+	bool ApplicationInitialize(application_config* appInfo);
 	bool ApplicationRun();
 }
 #endif // INCLUDE_APPLICATION_H

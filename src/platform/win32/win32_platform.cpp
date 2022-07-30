@@ -17,7 +17,7 @@ namespace HY3D
 		HINSTANCE instance;
 		i32 width;
 		i32 height;
-		const char *name;
+		const char* name;
 	};
 
 	struct win32_dll
@@ -26,9 +26,9 @@ namespace HY3D
 	};
 
 	// Windows VK_CODES: https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
-	namespace Win32VkCode
+	namespace Win32
 	{
-		global_var input_button toInputButton[] = {
+		global_var input_button VkCodeToInputButton[] = {
 			INPUT_BUTTON_UNSUPPORTED,
 			MOUSE_BUTTON_LEFT,		   // VK_LBUTTON 	    0x1 	The left mouse button
 			MOUSE_BUTTON_RIGHT,		   // VK_RBUTTON 	    0x2 	The right mouse button
@@ -283,14 +283,16 @@ namespace HY3D
 			INPUT_BUTTON_UNSUPPORTED,  // VK_PA1 		    0xFD 	PA1
 			INPUT_BUTTON_UNSUPPORTED,  // VK_OEM_CLEAR     	0xFE 	CLEAR
 		};
+
+		global_var f64 clockFrequency;
 	}
 
 	LRESULT CALLBACK Win32PlatformProcessMessages(HWND handle, UINT message, WPARAM wParam, LPARAM lParam);
 
-	bool PlatformInitialize(platform_state *platformState, const char *appName, i32 width, i32 height)
+	bool PlatformInitialize(platform_state* platformState, const char* appName, i32 width, i32 height)
 	{
 		platformState->data = new win32_platform_state;
-		win32_platform_state *state = (win32_platform_state *)platformState->data;
+		win32_platform_state* state = (win32_platform_state*)platformState->data;
 		state->instance = GetModuleHandleW(nullptr);
 		state->name = appName;
 
@@ -359,12 +361,18 @@ namespace HY3D
 		ShowWindow(state->handle, SW_SHOWDEFAULT);
 		SetFocus(state->handle);
 		SetCapture(state->handle);
+
+		// Clock
+		LARGE_INTEGER frequency;
+		QueryPerformanceFrequency(&frequency);
+		Win32::clockFrequency = (f64)frequency.QuadPart;
+
 		return true;
 	}
 
-	bool PlatformTerminate(platform_state *platformState)
+	bool PlatformTerminate(platform_state* platformState)
 	{
-		win32_platform_state *state = (win32_platform_state *)platformState->data;
+		win32_platform_state* state = (win32_platform_state*)platformState->data;
 
 		if (state->handle)
 		{
@@ -382,7 +390,7 @@ namespace HY3D
 		// before we need to process other messages. On application start we get:
 		// 1st message: WM_GETMINMAXINFO
 		// 2nd message: WM_NCCREATE -> sets window pointer in the windows api
-		win32_platform_state *state = (win32_platform_state *)GetWindowLongPtrA(handle, GWLP_USERDATA);
+		win32_platform_state* state = (win32_platform_state*)GetWindowLongPtrA(handle, GWLP_USERDATA);
 
 		LRESULT result = 0;
 		switch (message)
@@ -410,10 +418,10 @@ namespace HY3D
 			break;
 		case WM_NCCREATE:
 		{
-			CREATESTRUCT *pCreate = (CREATESTRUCT *)lParam;
+			CREATESTRUCT* pCreate = (CREATESTRUCT*)lParam;
 			if (pCreate)
 			{
-				win32_platform_state *state_ = (win32_platform_state *)(pCreate->lpCreateParams);
+				win32_platform_state* state_ = (win32_platform_state*)(pCreate->lpCreateParams);
 				// Set WinAPI-managed user data to store ptr to window class
 				SetWindowLongPtrA(handle, GWLP_USERDATA, (LONG_PTR)(state_));
 			}
@@ -427,9 +435,9 @@ namespace HY3D
 	}
 
 	// General Use Messages
-	bool PlatformProcessMessages(platform_state *platformState)
+	bool PlatformProcessMessages(platform_state* platformState)
 	{
-		win32_platform_state *state = (win32_platform_state *)platformState->data;
+		win32_platform_state* state = (win32_platform_state*)platformState->data;
 		// engine_input &input = engine.input;
 
 		MSG message;
@@ -437,28 +445,28 @@ namespace HY3D
 		{
 			switch (message.message)
 			{
-			// Order of messages when closing the window:
-			// WM_CLOSE   -> Unregister window class, destroy window handle
-			// WM_DESTROY -> Post Quit Message
-			// WM_QUIT    -> Return false and exit message loop
+				// Order of messages when closing the window:
+				// WM_CLOSE   -> Unregister window class, destroy window handle
+				// WM_DESTROY -> Post Quit Message
+				// WM_QUIT    -> Return false and exit message loop
 			case WM_QUIT:
 				return false;
 
-			// case WM_USER + 2: // WM_SIZE
-			// {
-			// 	engine.onResize = true;
-			// 	Win32GetWindowDim(window.handle, engine.windowWidth, engine.windowHeight);
-			// 	window.width = engine.windowWidth;
-			// 	window.height = engine.windowHeight;
-			// 	break;
-			// }
-			//------------------------------------------------------------------------
-			// KEYBOARD EVENTS
-			//------------------------------------------------------------------------
+				// case WM_USER + 2: // WM_SIZE
+				// {
+				// 	engine.onResize = true;
+				// 	Win32GetWindowDim(window.handle, engine.windowWidth, engine.windowHeight);
+				// 	window.width = engine.windowWidth;
+				// 	window.height = engine.windowHeight;
+				// 	break;
+				// }
+				//------------------------------------------------------------------------
+				// KEYBOARD EVENTS
+				//------------------------------------------------------------------------
 			case WM_SYSKEYDOWN:
 			case WM_KEYDOWN:
 			{
-				InputProcessButton(Win32VkCode::toInputButton[message.wParam], true);
+				InputProcessButton(Win32::VkCodeToInputButton[message.wParam], true);
 
 				if (InputIsKeyPressed(KEYBOARD_BUTTON_F4) && InputIsKeyPressed(KEYBOARD_BUTTON_ALT))
 				{
@@ -470,21 +478,21 @@ namespace HY3D
 			case WM_SYSKEYUP:
 			case WM_KEYUP:
 			{
-				InputProcessButton(Win32VkCode::toInputButton[message.wParam], false);
+				InputProcessButton(Win32::VkCodeToInputButton[message.wParam], false);
 				break;
 			}
 
-				// //------------------------------------------------------------------------
-				// // MOUSE EVENTS
-				// //------------------------------------------------------------------------
-				// case WM_INPUT:
-				// {
-				// 	UINT dwSize = sizeof(RAWINPUT);
-				// 	local_var BYTE lpb[sizeof(RAWINPUT)];
-				// 	if (GetRawInputData((HRAWINPUT)message.lParam, RID_INPUT, lpb, &dwSize, sizeof(RAWINPUTHEADER)) == -1)
-				// 	{
-				// 		break;
-				// 	}
+			// //------------------------------------------------------------------------
+			// // MOUSE EVENTS
+			// //------------------------------------------------------------------------
+			// case WM_INPUT:
+			// {
+			// 	UINT dwSize = sizeof(RAWINPUT);
+			// 	local_var BYTE lpb[sizeof(RAWINPUT)];
+			// 	if (GetRawInputData((HRAWINPUT)message.lParam, RID_INPUT, lpb, &dwSize, sizeof(RAWINPUTHEADER)) == -1)
+			// 	{
+			// 		break;
+			// 	}
 			case WM_MOUSEMOVE:
 			{
 				POINTS p = MAKEPOINTS(message.lParam);
@@ -504,7 +512,7 @@ namespace HY3D
 						;
 					RECT rect;
 					GetClientRect(state->handle, &rect);
-					MapWindowPoints(state->handle, 0, (POINT *)(&rect), 2);
+					MapWindowPoints(state->handle, 0, (POINT*)(&rect), 2);
 					ClipCursor(&rect);
 				}
 				if (isInWindow)
@@ -527,32 +535,32 @@ namespace HY3D
 			// 	break;
 			// }
 			case WM_LBUTTONDOWN:
-				InputProcessButton(Win32VkCode::toInputButton[VK_LBUTTON], true);
+				InputProcessButton(Win32::VkCodeToInputButton[VK_LBUTTON], true);
 				break;
 			case WM_RBUTTONDOWN:
-				InputProcessButton(Win32VkCode::toInputButton[VK_RBUTTON], true);
+				InputProcessButton(Win32::VkCodeToInputButton[VK_RBUTTON], true);
 				break;
 			case WM_MBUTTONDOWN:
-				InputProcessButton(Win32VkCode::toInputButton[VK_MBUTTON], true);
+				InputProcessButton(Win32::VkCodeToInputButton[VK_MBUTTON], true);
 				break;
 			case WM_LBUTTONUP:
-				InputProcessButton(Win32VkCode::toInputButton[VK_LBUTTON], false);
+				InputProcessButton(Win32::VkCodeToInputButton[VK_LBUTTON], false);
 				break;
 			case WM_RBUTTONUP:
-				InputProcessButton(Win32VkCode::toInputButton[VK_RBUTTON], false);
+				InputProcessButton(Win32::VkCodeToInputButton[VK_RBUTTON], false);
 				break;
 			case WM_MBUTTONUP:
-				InputProcessButton(Win32VkCode::toInputButton[VK_MBUTTON], false);
+				InputProcessButton(Win32::VkCodeToInputButton[VK_MBUTTON], false);
 				break;
-			// case WM_MOUSEWHEEL:
-			// 	input.mouse.UpdateWheelDelta(GET_WHEEL_DELTA_WPARAM(message.wParam));
-			// case WM_MOUSELEAVE:
-			// 	POINTS p = MAKEPOINTS(message.lParam);
-			// 	input.mouse.isInWindow = false;
-			// 	break;
-			// case WM_KILLFOCUS:
-			// 	input.keyboard.Clear();
-			// 	break;
+				// case WM_MOUSEWHEEL:
+				// 	input.mouse.UpdateWheelDelta(GET_WHEEL_DELTA_WPARAM(message.wParam));
+				// case WM_MOUSELEAVE:
+				// 	POINTS p = MAKEPOINTS(message.lParam);
+				// 	input.mouse.isInWindow = false;
+				// 	break;
+				// case WM_KILLFOCUS:
+				// 	input.keyboard.Clear();
+				// 	break;
 			default:
 			{
 				TranslateMessage(&message);
@@ -564,7 +572,7 @@ namespace HY3D
 		return true;
 	}
 
-	read_file_result PlatformReadFile(const char *filepath)
+	read_file_result PlatformReadFile(const char* filepath)
 	{
 		read_file_result result = {};
 
@@ -603,7 +611,7 @@ namespace HY3D
 		return result;
 	}
 
-	bool PlatformWriteFile(const char *filepath, u32 memorySize, void *memory)
+	bool PlatformWriteFile(const char* filepath, u32 memorySize, void* memory)
 	{
 		bool result = false;
 
@@ -626,7 +634,7 @@ namespace HY3D
 		return result;
 	}
 
-	void PlatformFreeFileMemory(void *memory)
+	void PlatformFreeFileMemory(void* memory)
 	{
 		if (memory)
 		{
@@ -634,14 +642,14 @@ namespace HY3D
 		}
 	}
 
-	bool PlatformGetFileWriteTime(const char *filepath, file_write_time *writeTime)
+	bool PlatformGetFileWriteTime(const char* filepath, file_write_time* writeTime)
 	{
 		char fullFilePath[MAX_PATH] = {};
 		if (GetFullPathNameA(filepath, ArrayCount(fullFilePath), fullFilePath, 0) == 0)
 			return false; // Couldn't find file
 
 		writeTime->data = malloc(sizeof(FILETIME));
-		FILETIME *result = (FILETIME *)writeTime->data;
+		FILETIME* result = (FILETIME*)writeTime->data;
 		WIN32_FIND_DATA data = {};
 		HANDLE handle = FindFirstFileA(fullFilePath, (LPWIN32_FIND_DATAA)&data);
 		if (handle != INVALID_HANDLE_VALUE)
@@ -652,7 +660,7 @@ namespace HY3D
 		return true;
 	}
 
-	bool PlatformWasFileUpdated(const char *filepath, file_write_time *writeTime)
+	bool PlatformWasFileUpdated(const char* filepath, file_write_time* writeTime)
 	{
 		if (!writeTime->data)
 		{
@@ -662,8 +670,8 @@ namespace HY3D
 		file_write_time newWriteTime;
 		PlatformGetFileWriteTime(filepath, &newWriteTime);
 
-		FILETIME *win32newWriteTime = (FILETIME *)writeTime->data;
-		FILETIME *win32oldWriteTime = (FILETIME *)writeTime->data;
+		FILETIME* win32newWriteTime = (FILETIME*)writeTime->data;
+		FILETIME* win32oldWriteTime = (FILETIME*)writeTime->data;
 		if (CompareFileTime(win32newWriteTime, win32oldWriteTime) == 1)
 		{
 			*win32oldWriteTime = *win32newWriteTime;
@@ -672,7 +680,7 @@ namespace HY3D
 		return false;
 	}
 
-	void Win32GetWindowDim(HWND handle, u32 &width, u32 height)
+	void Win32GetWindowDim(HWND handle, u32& width, u32 height)
 	{
 		RECT rect = {};
 		GetWindowRect(handle, &rect);
@@ -681,11 +689,11 @@ namespace HY3D
 	}
 
 	// Copied from: https://github.com/travisvroman/kohi/commit/ca0600eaefd11ed674c5a4642fb13ce17a96656f#diff-7f4ba46fd3ad1ae4558ae188a098f3a9d7009e1dbfc890e6562602f0f790e1e5
-	void PlatformPrint(const char *message, u8 colour)
+	void PlatformPrint(const char* message, u8 colour)
 	{
 		HANDLE console_handle = GetStdHandle(STD_OUTPUT_HANDLE);
 		// ERROR, WARN, INFO, DEBUG
-		static u8 levels[] = {64, 6, 2, 1};
+		static u8 levels[] = { 64, 6, 2, 1 };
 		SetConsoleTextAttribute(console_handle, levels[colour]);
 		size_t length = strlen(message);
 		LPDWORD number_written = 0;
@@ -693,25 +701,39 @@ namespace HY3D
 	}
 
 	// Copied from: https://github.com/travisvroman/kohi/commit/ca0600eaefd11ed674c5a4642fb13ce17a96656f#diff-7f4ba46fd3ad1ae4558ae188a098f3a9d7009e1dbfc890e6562602f0f790e1e5
-	void PlatformPrintError(const char *message, u8 colour)
+	void PlatformPrintError(const char* message, u8 colour)
 	{
 		HANDLE console_handle = GetStdHandle(STD_ERROR_HANDLE);
 		// ERROR, WARN, INFO, DEBUG
-		static u8 levels[] = {64, 6, 2, 1};
+		static u8 levels[] = { 64, 6, 2, 1 };
 		SetConsoleTextAttribute(console_handle, levels[colour]);
 		size_t length = strlen(message);
 		LPDWORD number_written = 0;
 		WriteConsoleA(GetStdHandle(STD_ERROR_HANDLE), message, (DWORD)length, number_written, 0);
 	}
 
-	bool PlatformLoadDynamicLibrary(const char *filepath, dynamic_library *libOut)
+	// NOTE: Must have set the clockFrequency at platform initialization
+	f64 PlatformGetTime()
+	{
+		LARGE_INTEGER now;
+		QueryPerformanceCounter(&now);
+		return (f64)now.QuadPart / Win32::clockFrequency;
+	}
+
+
+	void PlatformSleep(u64 ms)
+	{
+		Sleep(ms);
+	}
+
+	bool PlatformLoadDynamicLibrary(const char* filepath, dynamic_library* libOut)
 	{
 		strcpy(libOut->name, filepath);
 
 		libOut->data = new win32_dll;
-		win32_dll *dll = (win32_dll *)libOut->data;
+		win32_dll* dll = (win32_dll*)libOut->data;
 
-		const char *dllPath = filepath;
+		const char* dllPath = filepath;
 		char filepathNoExtension[MAX_PATH];
 
 		u32 filepathLength = (u32)strlen(filepath);
@@ -757,12 +779,12 @@ namespace HY3D
 		return false;
 	}
 
-	void *PlatformGetDynamicLibraryFunction(dynamic_library *lib, const char *function)
+	void* PlatformGetDynamicLibraryFunction(dynamic_library* lib, const char* function)
 	{
-		void *result = 0;
+		void* result = 0;
 		if (lib->data)
 		{
-			win32_dll *dll = (win32_dll *)lib->data;
+			win32_dll* dll = (win32_dll*)lib->data;
 			if (dll->dll)
 			{
 				result = GetProcAddress(dll->dll, function);
@@ -773,9 +795,9 @@ namespace HY3D
 		return result;
 	}
 
-	bool PlatformUnloadDynamicLibrary(dynamic_library *lib)
+	bool PlatformUnloadDynamicLibrary(dynamic_library* lib)
 	{
-		win32_dll *dll = (win32_dll *)lib->data;
+		win32_dll* dll = (win32_dll*)lib->data;
 		if (dll->dll)
 		{
 			FreeLibrary(dll->dll);
@@ -787,14 +809,14 @@ namespace HY3D
 		return false;
 	}
 
-	bool PlatformUpdatedDynamicLibrary(dynamic_library *lib)
+	bool PlatformUpdatedDynamicLibrary(dynamic_library* lib)
 	{
 		bool result = false;
 		file_write_time newWriteTime;
 		PlatformGetFileWriteTime(lib->name, &newWriteTime);
 
-		FILETIME *oldFILETIME = (FILETIME *)lib->writeTime.data;
-		FILETIME *newFILETIME = (FILETIME *)newWriteTime.data;
+		FILETIME* oldFILETIME = (FILETIME*)lib->writeTime.data;
+		FILETIME* newFILETIME = (FILETIME*)newWriteTime.data;
 		if (CompareFileTime(newFILETIME, oldFILETIME) == 1)
 		{
 			oldFILETIME->dwLowDateTime = newFILETIME->dwLowDateTime;
@@ -807,7 +829,7 @@ namespace HY3D
 		return result;
 	}
 
-	bool PlatformReloadDynamicLibrary(dynamic_library *lib)
+	bool PlatformReloadDynamicLibrary(dynamic_library* lib)
 	{
 		if (PlatformUpdatedDynamicLibrary(lib))
 		{
@@ -821,37 +843,37 @@ namespace HY3D
 	}
 
 #if 0
-bool Win32InitializeMemory(engine_platform *engine)
-{
-	engine_memory &memory = engine->memory;
+	bool Win32InitializeMemory(engine_platform* engine)
+	{
+		engine_memory& memory = engine->memory;
 
-	LPVOID baseAddress = (LPVOID)TERABYTES(2);
-	memory.permanentMemorySize = MEGABYTES(64);
-	memory.transientMemorySize = GIGABYTES(2);
-	u64 totalSize = memory.permanentMemorySize + memory.transientMemorySize;
-	memory.permanentMemory = VirtualAlloc(baseAddress, (SIZE_T)totalSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+		LPVOID baseAddress = (LPVOID)TERABYTES(2);
+		memory.permanentMemorySize = MEGABYTES(64);
+		memory.transientMemorySize = GIGABYTES(2);
+		u64 totalSize = memory.permanentMemorySize + memory.transientMemorySize;
+		memory.permanentMemory = VirtualAlloc(baseAddress, (SIZE_T)totalSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 
-	memory.transientMemory = (u8 *)memory.permanentMemory + memory.permanentMemorySize;
-	memory.isInitialized = false;
+		memory.transientMemory = (u8*)memory.permanentMemory + memory.permanentMemorySize;
+		memory.isInitialized = false;
 
-	/*memory.platformAPI_.FreeFileMemory = Win32FreeFileMemory;
-	memory.platformAPI_.ReadFile = Win32ReadFile;
-	memory.platformAPI_.WriteFile = Win32WriteFile;
-	memory.platformAPI_.GetFileWriteTime = Win32GetWriteTime;
-	memory.platformAPI_.WasFileUpdated = Win32FileUpdated;*/
+		/*memory.platformAPI_.FreeFileMemory = Win32FreeFileMemory;
+		memory.platformAPI_.ReadFile = Win32ReadFile;
+		memory.platformAPI_.WriteFile = Win32WriteFile;
+		memory.platformAPI_.GetFileWriteTime = Win32GetWriteTime;
+		memory.platformAPI_.WasFileUpdated = Win32FileUpdated;*/
 
-	engine->platformAPI.FreeFileMemory = Win32FreeFileMemory;
-	engine->platformAPI.ReadFile = Win32ReadFile;
-	engine->platformAPI.WriteFile = Win32WriteFile;
-	engine->platformAPI.GetFileWriteTime = Win32GetWriteTime;
-	engine->platformAPI.WasFileUpdated = Win32FileUpdated;
+		engine->platformAPI.FreeFileMemory = Win32FreeFileMemory;
+		engine->platformAPI.ReadFile = Win32ReadFile;
+		engine->platformAPI.WriteFile = Win32WriteFile;
+		engine->platformAPI.GetFileWriteTime = Win32GetWriteTime;
+		engine->platformAPI.WasFileUpdated = Win32FileUpdated;
 
-	// platformAPI = memory.platformAPI_;
+		// platformAPI = memory.platformAPI_;
 
-	bool result = memory.permanentMemory && memory.transientMemory;
-	DebugPrintFunctionResult(result);
-	return result;
-}
+		bool result = memory.permanentMemory && memory.transientMemory;
+		DebugPrintFunctionResult(result);
+		return result;
+	}
 #endif
 }
 #endif

@@ -3,7 +3,7 @@
 
 namespace HY3D
 {
-	bool ApplicationInitialize(application_config *appInfo)
+	bool ApplicationInitialize(application_config* appInfo)
 	{
 		if (Application::state.isInitialized)
 		{
@@ -25,14 +25,29 @@ namespace HY3D
 
 	bool ApplicationRun()
 	{
+		f64 frameStart = PlatformGetTime();
+		f64 frameEnd = frameStart;
+		f64 frameDt = frameEnd - frameStart;
+
 		while (PlatformProcessMessages(&Application::state.platformState))
 		{
 			EngineReloadCode(&Application::state.engine, &Application::state.engineLibrary);
 
 			if (!Application::state.isSuspended)
 			{
-				Application::state.engine.Update();
-				Application::state.engine.Render();
+				Application::state.engine.Update(frameDt);
+				Application::state.engine.Render(frameDt);
+
+				frameEnd = PlatformGetTime();
+				frameDt = frameEnd - frameStart;
+				frameStart = frameEnd;
+#if LIMIT_FRAMES
+				f64 remaningDt = 1.0 / TARGET_FPS - frameDt;
+				if (remaningDt > 0)
+				{
+					PlatformSleep((u64)(remaningDt * 1000.0));
+				}
+#endif
 			}
 		}
 

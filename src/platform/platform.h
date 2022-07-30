@@ -39,6 +39,9 @@ namespace HY3D
 	void PlatformPrint(const char *message, u8 colour);
 	void PlatformPrintError(const char *message, u8 colour);
 
+	f64 PlatformGetTime();
+	void PlatformSleep(u64 ms);
+
 	struct dynamic_library
 	{
 		char name[255];

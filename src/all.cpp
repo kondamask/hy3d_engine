@@ -1,2 +1,5 @@
-#include "core/core.cpp"
+#include "core/logger.cpp"
+#include "core/assert.cpp"
+#include "core/application.cpp"
+#include "core/input.cpp"
 #include "platform/win32/win32_platform.cpp"
