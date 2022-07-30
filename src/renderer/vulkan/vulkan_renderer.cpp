@@ -3,19 +3,22 @@
 
 namespace HY3D
 {
-	extern "C" HY3D_API RendererInitializeSignature(VulkanInitialize)
+	namespace Vulkan
 	{
-		LOG_DEBUG(__FUNCTION__);
-		return true;
-	}
+		extern "C" HY3D_API RendererInitializeSignature(RendererInitialize)
+		{
+			LOG_DEBUG(__FUNCTION__);
+			return true;
+		}
 
-	extern "C" HY3D_API RendererDrawFrameSignature(VulkanDrawFrame)
-	{
-		return;
-	}
+		extern "C" HY3D_API RendererDrawFrameSignature(RendererDrawFrame)
+		{
+			return;
+		}
 
-	extern "C" HY3D_API RendererTerminateSignature(VulkanTerminate)
-	{
-		LOG_DEBUG(__FUNCTION__);
-	}
+		extern "C" HY3D_API RendererTerminateSignature(RendererTerminate)
+		{
+			LOG_DEBUG(__FUNCTION__);
+		}
+	} // namespace Vulkan
 } // namespace HY3D

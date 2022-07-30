@@ -13,12 +13,14 @@ IF [%1] == [] (
 )
 
 IF %1 == Debug (
+	SET DLLMode=-LDd
 	SET ModeFlags=-MTd -Od -Zi -Zo
     SET OutputPath=.\bin\Debug
 	ECHO Debug Mode
 )
 
 IF %1 == Release (
+	SET DLLMode=-LD
 	SET ModeFlags=-O2
     SET OutputPath=.\bin\Release
 	ECHO Release Mode
@@ -32,7 +34,7 @@ SET SRC=..\..\src
 @REM Common Flags -----------------------------------------------------------------------
 
 SET CompilerFlags=-EHsc -FC -fp:except- -fp:fast -Gm- -GS- -nologo -Oi -WL %ModeFlags%
-SET Defines=-D_CRT_SECURE_NO_WARNINGS  -DHY3D_EXPORT
+SET Defines=-D_CRT_SECURE_NO_WARNINGS -DHY3D_EXPORT
 SET Includes=/I%SRC%
 SET Warnings=-W4 -wd4100 -wd4458 -wd4505 -wd4201
 
@@ -47,6 +49,7 @@ SET CommonLinkerOptions=%LinkerFlags% %LIBs% %OBJs%
 
 IF [%2] == [] (
 	ECHO Building All...
+	SET BUILD_SINGLE=0
 	GOTO :BUILD_ALL
 )
 IF %2 == Engine (
@@ -83,19 +86,20 @@ cl	%CommonCompilerOptions% ^
 
 :BUILD_RENDERER
 @REM Renderer  ---------------------------------------------------------------------------
-cl	-LD ^
+cl	%DLLMode% ^
 	%CommonCompilerOptions% ^
 	%SRC%\renderer\vulkan\vulkan_renderer.cpp ^
+	-Fevulkan_renderer ^
 -link ^
 	%CommonLinkerOptions% ^
-	-PDB:renderer_%RANDOM%.pdb
+	-PDB:vulkan_renderer_%RANDOM%.pdb
 IF %BUILD_SINGLE% == 1 (
 	GOTO :BUILD_DONE
 )
 
 :BUILD_ENGINE
 @REM Engine -----------------------------------------------------------------------------
-cl	-LD ^
+cl	%DLLMode% ^
 	%CommonCompilerOptions% ^
 	%SRC%\engine\engine.cpp ^
 -link ^

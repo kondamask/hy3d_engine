@@ -3,6 +3,12 @@
 
 #include "platform/platform.h"
 
+// NOTE: We have a main renderer api that the application can use
+// We will export these functions and link to them dynamically from the
+// renderer dll.
+// Each Graphics API backend needs to implement these exposes functions
+// using the same name so that we can load them
+
 namespace HY3D
 {
 	enum RENDERER_API
