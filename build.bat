@@ -8,17 +8,6 @@ ctime -begin hy3d_engine_build_time.ctm
 
 SET AppName=hy3d_engine
 
-@REM Common Flags ------------------------------------------------------------------------
-
-SET CompilerFlags=-EHsc -FC -fp:except- -fp:fast -Gm- -GS- -nologo -Oi -WL %ModeFlags%
-SET Defines=-D_CRT_SECURE_NO_WARNINGS  -DHY3D_EXPORT
-SET Includes=
-SET Warnings=-W4 -wd4100 -wd4458 -wd4505 -wd4201
-
-SET LinkerFlags=-incremental:no -opt:ref
-SET LIBs=user32.lib gdi32.lib
-SET OBJs=all.obj
-
 @REM Build Mode --------------------------------------------------------------------------
 
 IF [%1] == [] (
@@ -43,7 +32,17 @@ IF %1 == Release (
 IF NOT EXIST %OutputPath% MKDIR %OutputPath%
 PUSHD %OutputPath%
 SET SRC=..\..\src
-SET Includes=/I%SRC% %Includes%
+
+@REM Common Flags ------------------------------------------------------------------------
+
+SET CompilerFlags=-EHsc -FC -fp:except- -fp:fast -Gm- -GS- -nologo -Oi -WL %ModeFlags%
+SET Defines=-D_CRT_SECURE_NO_WARNINGS  -DHY3D_EXPORT
+SET Includes=/I%SRC%
+SET Warnings=-W4 -wd4100 -wd4458 -wd4505 -wd4201
+
+SET LinkerFlags=-incremental:no -opt:ref
+SET LIBs=user32.lib gdi32.lib
+SET OBJs=all.obj
 
 SET CommonCompilerOptions=%CompilerFlags% %Defines% %Includes% %Warnings%
 SET CommonLinkerOptions=%LinkerFlags% %LIBs% %OBJs%
@@ -63,7 +62,7 @@ IF %2 == Engine (
 @REM -------------------------------------------------------------------------------------
 :BUILD_ALL
 
-DEL *.pdb > NUL 2> NUL
+@REM DEL *.pdb > NUL 2> NUL
 
 @REM All Cpps ----------------------------------------------------------------------------
 cl	/c ^

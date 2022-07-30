@@ -16,11 +16,11 @@ namespace HY3D
 
 			if (pressed)
 			{
-				LOG_DEBUG("%s pressed", input_button_str[(u32)button]);
+				LOG_DEBUG("%s pressed", Input::buttonStr[(u32)button]);
 			}
 			else
 			{
-				LOG_DEBUG("%s released", input_button_str[(u32)button]);
+				LOG_DEBUG("%s released", Input::buttonStr[(u32)button]);
 			}
 		}
 		else

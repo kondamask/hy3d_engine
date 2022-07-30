@@ -9,7 +9,7 @@
                 "program": "${workspaceFolder}/bin/Debug/hy3d_engine.exe",
             },
             "args": [],
-            "stopAtEntry": false,
+            "stopAtEntry": true,
             "cwd": "${workspaceFolder}",
             "environment": [],
             "console": "integratedTerminal"
