@@ -1,10 +1,6 @@
 @echo off
 
-ECHO ------------------------------------------------------------------------------------
-
 ctime -begin hy3d_engine_build_time.ctm
-
-@REM ------------------------------------------------------------------------------------
 
 SET AppName=hy3d_engine
 
@@ -48,8 +44,6 @@ SET CommonCompilerOptions=%CompilerFlags% %Defines% %Includes% %Warnings%
 SET CommonLinkerOptions=%LinkerFlags% %LIBs% %OBJs%
 
 @REM Build Targets ----------------------------------------------------------------------
-
-SET BUILD_SINGLE=0
 
 IF [%2] == [] (
 	ECHO Building All...
@@ -111,12 +105,7 @@ IF %BUILD_SINGLE% == 1 (
 	GOTO :BUILD_DONE
 )
 
-POPD
-
 :BUILD_DONE
-
-ECHO -------------------------------------------------------------------------------------
-
-:EOF
-
+POPD
+ECHO -------------------------------------------------
 ctime -end hy3d_engine_build_time.ctm
