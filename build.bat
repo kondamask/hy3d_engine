@@ -27,6 +27,8 @@ IF %1 == Release (
 	COLOR 0A
 )
 
+@REM ------------------------------------------------------------------------------------
+
 IF NOT EXIST %OutputPath% MKDIR %OutputPath%
 PUSHD %OutputPath%
 SET SRC=..\..\src
@@ -78,21 +80,22 @@ rc	/nologo ^
 	%SRC%\platform\win32\resource.rc
 
 @REM App Entry --------------------------------------------------------------------------
-cl	%CommonCompilerOptions% ^
+cl	-Fe%AppName% ^
+	%CommonCompilerOptions% ^
 	%SRC%\main.cpp win32_hy3d.res ^
-	-Fe%AppName% ^
 -link ^
 	%CommonLinkerOptions%
 
 :BUILD_RENDERER
 @REM Renderer  ---------------------------------------------------------------------------
 cl	%DLLMode% ^
+	/I%VULKAN_SDK%\Include ^
+	/Fevulkan_renderer ^
 	%CommonCompilerOptions% ^
 	%SRC%\renderer\vulkan\vulkan_renderer.cpp ^
-	-Fevulkan_renderer ^
 -link ^
-	%CommonLinkerOptions% ^
-	-PDB:vulkan_renderer_%RANDOM%.pdb
+	-PDB:vulkan_renderer_%RANDOM%.pdb ^
+	%CommonLinkerOptions%
 IF %BUILD_SINGLE% == 1 (
 	GOTO :BUILD_DONE
 )
@@ -103,8 +106,8 @@ cl	%DLLMode% ^
 	%CommonCompilerOptions% ^
 	%SRC%\engine\engine.cpp ^
 -link ^
-	%CommonLinkerOptions% ^
-	-PDB:engine_%RANDOM%.pdb
+	-PDB:engine_%RANDOM%.pdb ^
+	%CommonLinkerOptions%
 IF %BUILD_SINGLE% == 1 (
 	GOTO :BUILD_DONE
 )

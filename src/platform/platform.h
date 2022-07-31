@@ -1,10 +1,6 @@
 #ifndef INCLUDE_PLATFORM_H
 #define INCLUDE_PLATFORM_H
 
-#include "core/utils.h"
-#include "core/ASSERT.h"
-#include "core/logger.h"
-#include "core/input.h"
 #include "defines.h"
 
 namespace HY3D

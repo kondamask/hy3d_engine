@@ -1,4 +1,5 @@
 #include "input.h"
+#include "logger.h"
 
 namespace HY3D
 {

@@ -2,7 +2,6 @@
 #define INCLUDE_INPUT_H
 
 #include "defines.h"
-#include "logger.h"
 
 namespace HY3D
 {

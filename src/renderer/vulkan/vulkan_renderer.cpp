@@ -1,5 +1,13 @@
 #include "renderer/renderer.h"
+#include "defines.h"
 #include "core/logger.h"
+
+#if PLATFORM_WINDOWS
+#define VK_USE_PLATFORM_WIN32_KHR
+#endif
+
+#define VK_NO_PROTOTYPES
+#include "vulkan/vulkan.h"
 
 namespace HY3D
 {

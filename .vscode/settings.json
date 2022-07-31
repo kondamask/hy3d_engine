@@ -1,0 +1,12 @@
+{
+	"files.associations": {
+		"ios": "cpp",
+		"istream": "cpp",
+		"ostream": "cpp",
+		"xfacet": "cpp",
+		"xiosbase": "cpp",
+		"xlocale": "cpp",
+		"xlocnum": "cpp",
+		"xloctime": "cpp"
+	}
+}

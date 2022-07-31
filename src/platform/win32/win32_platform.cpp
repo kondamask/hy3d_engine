@@ -2,6 +2,11 @@
 
 #if PLATFORM_WINDOWS
 
+#include "core/utils.h"
+#include "core/ASSERT.h"
+#include "core/logger.h"
+#include "core/input.h"
+
 namespace HY3D
 {
 #include "resource.h"

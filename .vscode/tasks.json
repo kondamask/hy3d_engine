@@ -6,7 +6,7 @@
             "windows": {
                 "command": "./build Debug",
             },
-            "group": "build"
+            "group": "build",
         },
         {
             "label": "Build Engine - Debug Mode",
@@ -44,5 +44,6 @@
         "panel": "shared",
         "showReuseMessage": false,
         "clear": true,
+        "group": "BuildGroup"
     },
 }
