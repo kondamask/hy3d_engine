@@ -31,19 +31,19 @@ namespace HY3D
 #endif
 	void EngineLoadCode(engine *engine)
 	{
-		if (PlatformLoadDynamicLibrary(ENGINE_DLL, &engine->library))
+		if (PlatformLoadLibrary(ENGINE_DLL, &engine->library))
 		{
 			engine->Initialize =
-				(pfnEngineInitialize)PlatformGetDynamicLibraryFunction(&engine->library, "EngineInitialize");
+				(pfnEngineInitialize)PlatformGetLibraryFunction(&engine->library, "EngineInitialize");
 
 			engine->Update =
-				(pfnEngineUpdate)PlatformGetDynamicLibraryFunction(&engine->library, "EngineUpdate");
+				(pfnEngineUpdate)PlatformGetLibraryFunction(&engine->library, "EngineUpdate");
 
 			engine->Render =
-				(pfnEngineRender)PlatformGetDynamicLibraryFunction(&engine->library, "EngineRender");
+				(pfnEngineRender)PlatformGetLibraryFunction(&engine->library, "EngineRender");
 
 			engine->Terminate =
-				(pfnEngineTerminate)PlatformGetDynamicLibraryFunction(&engine->library, "EngineTerminate");
+				(pfnEngineTerminate)PlatformGetLibraryFunction(&engine->library, "EngineTerminate");
 		}
 
 		if (!engine->Initialize)

@@ -21,7 +21,7 @@ namespace HY3D
 		RendererLoadCode(&Application::state.renderer, RENDERER_API_VULKAN);
 
 		Application::state.engine.Initialize();
-		Application::state.renderer.Initialize();
+		Application::state.renderer.Initialize(&Application::state.platformState);
 
 		return true;
 	}

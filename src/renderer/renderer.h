@@ -24,7 +24,7 @@ namespace HY3D
 		f64 dt;
 	};
 
-#define RendererInitializeSignature(name) bool name()
+#define RendererInitializeSignature(name) bool name(platform_state *platformState)
 	typedef RendererInitializeSignature(_RendererInitialize);
 #define pfnRendererInitialize _RendererInitialize *
 

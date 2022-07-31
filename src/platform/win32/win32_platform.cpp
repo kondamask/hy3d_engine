@@ -16,15 +16,6 @@ namespace HY3D
 #define WIN32_WINDOW_X_BORDER 23
 #define WIN32_WINDOW_Y_BORDER 39
 
-	struct win32_platform_state
-	{
-		HWND handle;
-		HINSTANCE instance;
-		i32 width;
-		i32 height;
-		const char* name;
-	};
-
 	struct win32_dll
 	{
 		HMODULE dll;
@@ -33,6 +24,15 @@ namespace HY3D
 	// Windows VK_CODES: https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
 	namespace Win32
 	{
+		struct state
+		{
+			HWND handle;
+			HINSTANCE instance;
+			i32 width;
+			i32 height;
+			const char* name;
+		};
+
 		global_var input_button VkCodeToInputButton[] = {
 			INPUT_BUTTON_UNSUPPORTED,
 			MOUSE_BUTTON_LEFT,		   // VK_LBUTTON 	    0x1 	The left mouse button
@@ -292,12 +292,18 @@ namespace HY3D
 		global_var f64 clockFrequency;
 	}
 
+	const char* PlatformGetAppName(platform_state* platformState)
+	{
+		Win32::state* state = (Win32::state*)platformState->data;
+		return state->name;
+	}
+
 	LRESULT CALLBACK Win32PlatformProcessMessages(HWND handle, UINT message, WPARAM wParam, LPARAM lParam);
 
 	bool PlatformInitialize(platform_state* platformState, const char* appName, i32 width, i32 height)
 	{
-		platformState->data = new win32_platform_state;
-		win32_platform_state* state = (win32_platform_state*)platformState->data;
+		platformState->data = new Win32::state;
+		Win32::state* state = (Win32::state*)platformState->data;
 		state->instance = GetModuleHandleW(nullptr);
 		state->name = appName;
 
@@ -377,7 +383,7 @@ namespace HY3D
 
 	bool PlatformTerminate(platform_state* platformState)
 	{
-		win32_platform_state* state = (win32_platform_state*)platformState->data;
+		Win32::state* state = (Win32::state*)platformState->data;
 
 		if (state->handle)
 		{
@@ -395,7 +401,7 @@ namespace HY3D
 		// before we need to process other messages. On application start we get:
 		// 1st message: WM_GETMINMAXINFO
 		// 2nd message: WM_NCCREATE -> sets window pointer in the windows api
-		win32_platform_state* state = (win32_platform_state*)GetWindowLongPtrA(handle, GWLP_USERDATA);
+		Win32::state* state = (Win32::state*)GetWindowLongPtrA(handle, GWLP_USERDATA);
 
 		LRESULT result = 0;
 		switch (message)
@@ -426,9 +432,9 @@ namespace HY3D
 			CREATESTRUCT* pCreate = (CREATESTRUCT*)lParam;
 			if (pCreate)
 			{
-				win32_platform_state* state_ = (win32_platform_state*)(pCreate->lpCreateParams);
+				Win32::state* pState = (Win32::state*)(pCreate->lpCreateParams);
 				// Set WinAPI-managed user data to store ptr to window class
-				SetWindowLongPtrA(handle, GWLP_USERDATA, (LONG_PTR)(state_));
+				SetWindowLongPtrA(handle, GWLP_USERDATA, (LONG_PTR)(pState));
 			}
 			result = DefWindowProc(handle, message, wParam, lParam);
 			break;
@@ -442,19 +448,18 @@ namespace HY3D
 	// General Use Messages
 	bool PlatformProcessMessages(platform_state* platformState)
 	{
-		win32_platform_state* state = (win32_platform_state*)platformState->data;
-		// engine_input &input = engine.input;
+		Win32::state* state = (Win32::state*)platformState->data;
 
 		MSG message;
 		while (PeekMessage(&message, 0, 0, 0, PM_REMOVE))
 		{
 			switch (message.message)
 			{
+			case WM_QUIT:
 				// Order of messages when closing the window:
 				// WM_CLOSE   -> Unregister window class, destroy window handle
 				// WM_DESTROY -> Post Quit Message
 				// WM_QUIT    -> Return false and exit message loop
-			case WM_QUIT:
 				return false;
 
 				// case WM_USER + 2: // WM_SIZE
@@ -731,9 +736,9 @@ namespace HY3D
 		Sleep(ms);
 	}
 
-	bool PlatformLoadDynamicLibrary(const char* filepath, dynamic_library* libOut)
+	bool PlatformLoadLibrary(const char* filepath, dynamic_library* libOut)
 	{
-		PlatformUnloadDynamicLibrary(libOut);
+		PlatformUnloadLibrary(libOut);
 
 		strcpy(libOut->name, filepath);
 		libOut->data = new win32_dll;
@@ -785,7 +790,25 @@ namespace HY3D
 		return false;
 	}
 
-	bool PlatformUnloadDynamicLibrary(dynamic_library* lib)
+	bool PlatformLoadSystemLibrary(const char* filepath, dynamic_library* libOut)
+	{
+		PlatformUnloadLibrary(libOut);
+
+		strcpy(libOut->name, filepath);
+		libOut->data = new win32_dll;
+		win32_dll* dll = (win32_dll*)libOut->data;
+
+		dll->dll = LoadLibraryA(filepath);
+		if (dll->dll)
+		{
+			LOG_DEBUG("Loaded '%s'", filepath);
+			return true;
+		}
+
+		return false;
+	}
+
+	bool PlatformUnloadLibrary(dynamic_library* lib)
 	{
 		if (!lib->data) return true;
 
@@ -801,7 +824,7 @@ namespace HY3D
 		return false;
 	}
 
-	void* PlatformGetDynamicLibraryFunction(dynamic_library* lib, const char* function)
+	void* PlatformGetLibraryFunction(dynamic_library* lib, const char* function)
 	{
 		void* result = 0;
 		if (lib->data)
@@ -835,6 +858,24 @@ namespace HY3D
 		if (newWriteTime.data)
 			free(newWriteTime.data);
 		return result;
+	}
+
+	void PlatformCreateVulkanSurface(platform_state* platformState, void* surfaceInfoIn)
+	{
+		// NOTE: This is a copy of the actual VkWin32SurfaceCreateInfoKHR struct
+		// I do this to avoid including the vulkan header here
+		struct VkWin32SurfaceCreateInfoKHR {
+			u32                 			sType;
+			const void* pNext;
+			u32	  							flags;
+			HINSTANCE                       hinstance;
+			HWND                            hwnd;
+		};
+		VkWin32SurfaceCreateInfoKHR* surfaceInfo = (VkWin32SurfaceCreateInfoKHR*)surfaceInfoIn;
+
+		Win32::state* state = (Win32::state*)platformState->data;
+		surfaceInfo->hinstance = state->instance;
+		surfaceInfo->hwnd = state->handle;
 	}
 
 #if 0

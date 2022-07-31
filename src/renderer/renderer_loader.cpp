@@ -32,7 +32,7 @@ namespace HY3D
 		switch (rendererAPI)
 		{
 		case RENDERER_API_VULKAN:
-			loadedDLL = PlatformLoadDynamicLibrary(RENDERER_DLL(VULKAN_RENDERER_DLL), &renderer->library); break;
+			loadedDLL = PlatformLoadLibrary(RENDERER_DLL(VULKAN_RENDERER_DLL), &renderer->library); break;
 		case RENDERER_API_OPENGL: break;
 		case RENDERER_API_DIRECTX: break;
 		}
@@ -40,13 +40,13 @@ namespace HY3D
 		if (loadedDLL)
 		{
 			renderer->Initialize =
-				(pfnRendererInitialize)PlatformGetDynamicLibraryFunction(&renderer->library, "RendererInitialize");
+				(pfnRendererInitialize)PlatformGetLibraryFunction(&renderer->library, "RendererInitialize");
 
 			renderer->DrawFrame =
-				(pfnRendererDrawFrame)PlatformGetDynamicLibraryFunction(&renderer->library, "RendererDrawFrame");
+				(pfnRendererDrawFrame)PlatformGetLibraryFunction(&renderer->library, "RendererDrawFrame");
 
 			renderer->Terminate =
-				(pfnRendererTerminate)PlatformGetDynamicLibraryFunction(&renderer->library, "RendererTerminate");
+				(pfnRendererTerminate)PlatformGetLibraryFunction(&renderer->library, "RendererTerminate");
 		}
 
 		if (!renderer->Initialize)

@@ -1,13 +1,11 @@
 #include "renderer/renderer.h"
-#include "defines.h"
 #include "core/logger.h"
 
-#if PLATFORM_WINDOWS
-#define VK_USE_PLATFORM_WIN32_KHR
-#endif
+#include "vulkan_renderer.h"
+#include "vulkan_functions.cpp"
+#include "vulkan_backend.cpp"
 
-#define VK_NO_PROTOTYPES
-#include "vulkan/vulkan.h"
+#include "core/assert.h"
 
 namespace HY3D
 {
@@ -15,6 +13,30 @@ namespace HY3D
 	{
 		extern "C" HY3D_API RendererInitializeSignature(RendererInitialize)
 		{
+			bool result = PlatformLoadSystemLibrary(VULKAN_DLL, &context.library);
+			ASSERT(result == true);
+
+			vkGetInstanceProcAddr = (pfn_vkGetInstanceProcAddr)PlatformGetLibraryFunction(&context.library, "vkGetInstanceProcAddr");
+			ASSERT(vkGetInstanceProcAddr != 0);
+
+			result = LoadGlobalFunctions();
+			ASSERT(result == true);
+
+			result = CreateInstance(platformState);
+			ASSERT(result == true);
+
+			result = PickGPU();
+			ASSERT(result == true);
+
+			result = CreateSurface(platformState);
+			ASSERT(result);
+
+			result = PickCommandQueues();
+			ASSERT(result);
+
+			result = CreateDevice();
+			ASSERT(result == true);
+
 			LOG_DEBUG(__FUNCTION__);
 			return true;
 		}
@@ -26,6 +48,7 @@ namespace HY3D
 
 		extern "C" HY3D_API RendererTerminateSignature(RendererTerminate)
 		{
+			PlatformUnloadLibrary(&context.library);
 			LOG_DEBUG(__FUNCTION__);
 		}
 	} // namespace Vulkan
