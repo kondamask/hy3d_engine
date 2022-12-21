@@ -13,6 +13,8 @@
 
 #define VULKAN_DLL "vulkan-1.dll"
 
+#define NUM_SWAPCHAIN_IMAGES 2 // TODO: Make this editable on runtime
+
 namespace HY3D
 {
 	namespace Vulkan
@@ -39,6 +41,14 @@ namespace HY3D
 			u32 presentQueueFamilyIndex;
 			u32 transferQueueFamilyIndex;
 
+			bool canRender;
+			VkExtent2D windowExtent;
+			VkSwapchainKHR swapchain;
+			VkRenderPass renderPass;
+			VkImage swapchainImages[NUM_SWAPCHAIN_IMAGES];
+			VkImageView swapchainImageViews[NUM_SWAPCHAIN_IMAGES];
+			VkFramebuffer framebuffers[NUM_SWAPCHAIN_IMAGES];
+			u32 swapchainImageCount;
 #if _DEBUG
 			VkDebugUtilsMessengerEXT debugMessenger;
 #endif
@@ -48,10 +58,15 @@ namespace HY3D
 
 } // namespace HY3D
 
+
 #if _DEBUG
 #define VkSuccess(call) (call == VK_SUCCESS)
 #define VkSuccessOrReturnFalse(call) \
-	if (!VkSuccess(call)) { return false; }
+	if (!VkSuccess(call)) return false;
+
+#define VkGoodHandle(handle) (handle != VK_NULL_HANDLE)
+#define VkGoodHandleOrReturnFalse(handle) \
+	if (!VkGoodHandle(handle)) return false;
 #else
 #define VkSuccess(call) call
 #endif

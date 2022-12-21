@@ -38,7 +38,7 @@ namespace HY3D
 		}
 #endif
 
-		static_func bool CreateInstance(platform_state *platformState)
+		static_func bool CreateInstance(platform_state* platformState)
 		{
 			VkApplicationInfo appInfo = {};
 			appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -206,7 +206,7 @@ namespace HY3D
 				}
 			}
 
-			context.gpu = gpuBuffer[bestGPU]; 
+			context.gpu = gpuBuffer[bestGPU];
 			context.gpuProperties = gpuProperties;
 			context.gpuMemoryProperties = gpuMemoryProperties;
 
@@ -409,6 +409,200 @@ namespace HY3D
 			vkGetDeviceQueue(context.device, context.graphicsQueueFamilyIndex, 0, &context.graphicsQueue);
 			vkGetDeviceQueue(context.device, context.presentQueueFamilyIndex, 0, &context.presentQueue);
 
+			return true;
+		}
+
+		static_func bool ClearSwapchainImages()
+		{
+			VkGoodHandleOrReturnFalse(context.device);
+			vkDeviceWaitIdle(context.device);
+			for (u32 i = 0; i < context.swapchainImageCount; i++)
+			{
+				if (VkGoodHandle(context.swapchainImageViews[i]))
+					vkDestroyImageView(context.device, context.swapchainImageViews[i], 0);
+			}
+			return true;
+		}
+
+		static_func bool CreateSwapchain()
+		{
+			bool result = true;
+
+			VkGoodHandleOrReturnFalse(context.device);
+			vkDeviceWaitIdle(context.device);
+
+			context.canRender = false;
+
+			// NOTE: Get Surface capabilities
+			{
+				VkSurfaceCapabilitiesKHR surfCapabilities = {};
+				VkSuccessOrReturnFalse(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(context.gpu, context.surface, &surfCapabilities));
+
+				context.windowExtent = {};
+				if (surfCapabilities.currentExtent.width == UINT32_MAX)
+				{
+					context.windowExtent.width = 640;
+					context.windowExtent.height = 480;
+
+					if (context.windowExtent.width < surfCapabilities.minImageExtent.width)
+						context.windowExtent.width = surfCapabilities.minImageExtent.width;
+					else if (context.windowExtent.width > surfCapabilities.maxImageExtent.width)
+						context.windowExtent.width = surfCapabilities.maxImageExtent.width;
+
+					if (context.windowExtent.height < surfCapabilities.minImageExtent.height)
+						context.windowExtent.height = surfCapabilities.minImageExtent.height;
+					else if (context.windowExtent.height > surfCapabilities.maxImageExtent.height)
+						context.windowExtent.height = surfCapabilities.maxImageExtent.height;
+				}
+				else
+				{ // If the surface size is defined, the swap chain size must match
+					context.windowExtent = surfCapabilities.currentExtent;
+				}
+				if ((context.windowExtent.width == 0) || (context.windowExtent.height == 0))
+				{
+					return true;
+				}
+
+				// NOTE: Determine the number of VkImage's to use in the swap chain.
+				// Constant at 2 for now: Double buffering
+				ASSERT(NUM_SWAPCHAIN_IMAGES >= surfCapabilities.minImageCount);
+				ASSERT(NUM_SWAPCHAIN_IMAGES <= surfCapabilities.maxImageCount);
+				context.swapchainImageCount = NUM_SWAPCHAIN_IMAGES;
+
+				// NOTE: Determine the pre-transform
+				VkSurfaceTransformFlagBitsKHR desiredPreTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR; // do nothing
+				if (!(surfCapabilities.supportedTransforms & desiredPreTransform))
+					desiredPreTransform = surfCapabilities.currentTransform;
+
+				// NOTE: Set the present mode
+				VkPresentModeKHR desiredPresentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+				// The FIFO present mode is guaranteed by the spec to be supported
+
+				uint32_t presentModeCount;
+				VkSuccessOrReturnFalse(vkGetPhysicalDeviceSurfacePresentModesKHR(context.gpu, context.surface, &presentModeCount, NULL));
+				VkPresentModeKHR presentModes[16] = {};
+				;
+				ASSERT(presentModeCount <= ArrayCount(presentModes));
+				VkSuccessOrReturnFalse(vkGetPhysicalDeviceSurfacePresentModesKHR(context.gpu, context.surface, &presentModeCount, presentModes));
+				bool desiredPresentModeSupported = false;
+				for (u32 i = 0; i < presentModeCount; i++)
+				{
+					if (desiredPresentMode == presentModes[i])
+						desiredPresentModeSupported = true;
+				}
+				if (!desiredPresentModeSupported)
+				{
+					desiredPresentMode = VK_PRESENT_MODE_FIFO_KHR; // VK_PRESENT_MODE_IMMEDIATE_KHR;
+				}
+
+				// NOTE: Find a supported composite alpha mode - one of these is guaranteed to be set
+				VkCompositeAlphaFlagBitsKHR desiredCompositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+				VkCompositeAlphaFlagBitsKHR compositeAlphaFlags[4] = {
+					VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+					VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,
+					VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR,
+					VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR,
+				};
+				for (uint32_t i = 0; i < ArrayCount(compositeAlphaFlags); i++)
+				{
+					if (surfCapabilities.supportedCompositeAlpha & compositeAlphaFlags[i])
+					{
+						desiredCompositeAlpha = compositeAlphaFlags[i];
+						break;
+					}
+				}
+
+				// NOTE: Set image usage flags
+				VkImageUsageFlags desiredImageUsageFlags = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT; // must alwasy be supported
+				if (surfCapabilities.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_DST_BIT)
+					desiredImageUsageFlags |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+				else
+				{
+					LOG_ERROR("VK_IMAGE_USAGE_TRANSFER_DST_BIT not supported\n");
+					return false;
+				}
+
+				// NOTE: Make the actual swapchain
+				VkSwapchainCreateInfoKHR swapchainInfo = {};
+				swapchainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+				swapchainInfo.surface = context.surface;
+				swapchainInfo.imageExtent = context.windowExtent;
+				swapchainInfo.imageFormat = context.surfaceFormat.format;
+				swapchainInfo.imageColorSpace = context.surfaceFormat.colorSpace;
+				swapchainInfo.imageArrayLayers = 1;
+				swapchainInfo.imageUsage = desiredImageUsageFlags;
+				swapchainInfo.minImageCount = context.swapchainImageCount;
+				swapchainInfo.preTransform = desiredPreTransform;
+				swapchainInfo.compositeAlpha = desiredCompositeAlpha;
+				swapchainInfo.presentMode = desiredPresentMode;
+				swapchainInfo.clipped = true;
+
+				u32 queueFamilyIndices[2] = { context.graphicsQueueFamilyIndex, context.presentQueueFamilyIndex };
+				if (context.graphicsQueueFamilyIndex != context.presentQueueFamilyIndex)
+				{
+					// If the graphics and present queues are from different queue families,
+					// we either have to explicitly transfer ownership of images between
+					// the queues, or we have to create the swapchain with imageSharingMode
+					// as VK_SHARING_MODE_CONCURRENT
+					swapchainInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+					swapchainInfo.queueFamilyIndexCount = 2;
+					swapchainInfo.pQueueFamilyIndices = queueFamilyIndices;
+				}
+				else
+				{
+					swapchainInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+				}
+
+				VkSwapchainKHR oldSwapchain = context.swapchain;
+				swapchainInfo.oldSwapchain = oldSwapchain;
+				VkSuccessOrReturnFalse(vkCreateSwapchainKHR(context.device, &swapchainInfo, 0, &context.swapchain));
+				VkGoodHandleOrReturnFalse(oldSwapchain);
+				vkDestroySwapchainKHR(context.device, oldSwapchain, 0);
+			}
+
+			// NOTE: Create the Image views
+			{
+				if (!ClearSwapchainImages())
+				{
+					LOG_ERROR("Failed to clear swapchain images.");
+					return false;
+				}
+				VkSuccessOrReturnFalse(vkGetSwapchainImagesKHR(context.device, context.swapchain, &context.swapchainImageCount, 0));
+				ASSERT(context.swapchainImageCount == ArrayCount(context.swapchainImages));
+				VkSuccessOrReturnFalse(vkGetSwapchainImagesKHR(context.device, context.swapchain, &context.swapchainImageCount, context.swapchainImages));
+
+				VkImageViewCreateInfo imageViewInfo = {};
+				imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+				imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+				imageViewInfo.format = context.surfaceFormat.format;
+				imageViewInfo.components.r = VK_COMPONENT_SWIZZLE_R;
+				imageViewInfo.components.g = VK_COMPONENT_SWIZZLE_G;
+				imageViewInfo.components.b = VK_COMPONENT_SWIZZLE_B;
+				imageViewInfo.components.a = VK_COMPONENT_SWIZZLE_A;
+				imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				imageViewInfo.subresourceRange.baseMipLevel = 0;
+				imageViewInfo.subresourceRange.levelCount = 1;
+				imageViewInfo.subresourceRange.baseArrayLayer = 0;
+				imageViewInfo.subresourceRange.layerCount = 1;
+				for (u32 i = 0; i < context.swapchainImageCount; i++)
+				{
+					imageViewInfo.image = context.swapchainImages[i];
+					VkSuccessOrReturnFalse(vkCreateImageView(context.device, &imageViewInfo, 0, &context.swapchainImageViews[i]));
+				}
+			}
+
+			// if (result)
+			// 	result = VulkanCreateDepthBuffer();
+
+			// if (result)
+			// 	result = VulkanCreateMSAABuffer();
+
+			// if (result)
+			// 	result = VulkanCreateFrameBuffers();
+
+			context.canRender = result;
+
+			LOG_DEBUG("Created swapchain");
 			return true;
 		}
 

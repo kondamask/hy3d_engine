@@ -43,6 +43,9 @@ namespace HY3D
 
 		extern "C" HY3D_API RendererDrawFrameSignature(RendererDrawFrame)
 		{
+			if (!CreateSwapchain())
+				return;
+				
 			return;
 		}
 
