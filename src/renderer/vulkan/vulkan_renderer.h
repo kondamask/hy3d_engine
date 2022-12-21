@@ -20,12 +20,12 @@ namespace HY3D
 		global_var struct {
 			dynamic_library library;
 
-			VkPhysicalDeviceProperties gpuProperties;
-			VkPhysicalDeviceMemoryProperties memoryProperties;
-
 			VkInstance instance;
-			VkPhysicalDevice gpu;
 			VkDevice device;
+
+			VkPhysicalDevice gpu;
+			VkPhysicalDeviceProperties gpuProperties;
+			VkPhysicalDeviceMemoryProperties gpuMemoryProperties;
 
 			VkSurfaceKHR surface;
 			VkSurfaceFormatKHR surfaceFormat;

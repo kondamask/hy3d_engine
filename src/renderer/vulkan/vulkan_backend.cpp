@@ -173,13 +173,42 @@ namespace HY3D
 			VkSuccessOrReturnFalse(vkEnumeratePhysicalDevices(context.instance, &gpuCount, 0));
 			ASSERT(gpuCount > 0 && gpuCount <= ArrayCount(gpuBuffer));
 			VkSuccessOrReturnFalse(vkEnumeratePhysicalDevices(context.instance, &gpuCount, gpuBuffer));
-			context.gpu = gpuBuffer[0];
 
-			// TODO: ACTUALY CHECK WHICH GPU IS BEST TO USE BY CHECKING THEIR QUEUES
-			// For now it's ok since I only have 1 gpu.
+			i32 bestGPUScore = -1;
+			i32 bestGPU = -1;
 
-			vkGetPhysicalDeviceProperties(context.gpu, &context.gpuProperties);
-			vkGetPhysicalDeviceMemoryProperties(context.gpu, &context.memoryProperties);
+			VkPhysicalDeviceProperties gpuProperties = {};
+			VkPhysicalDeviceMemoryProperties gpuMemoryProperties = {};
+			for (u32 iGPU = 0; iGPU < gpuCount; iGPU++)
+			{
+				vkGetPhysicalDeviceProperties(gpuBuffer[iGPU], &gpuProperties);
+				vkGetPhysicalDeviceMemoryProperties(gpuBuffer[iGPU], &gpuMemoryProperties);
+
+				i32 curGPUScore = 0;
+				switch (gpuProperties.deviceType)
+				{
+				case VK_PHYSICAL_DEVICE_TYPE_OTHER:
+					curGPUScore += 1; break;
+				case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:
+					curGPUScore += 2; break;
+				case VK_PHYSICAL_DEVICE_TYPE_CPU:
+					curGPUScore += 3; break;
+				case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
+					curGPUScore += 4; break;
+				case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
+					curGPUScore += 5; break;
+				}
+
+				if (curGPUScore > bestGPUScore)
+				{
+					bestGPUScore = curGPUScore;
+					bestGPU = iGPU;
+				}
+			}
+
+			context.gpu = gpuBuffer[bestGPU]; 
+			context.gpuProperties = gpuProperties;
+			context.gpuMemoryProperties = gpuMemoryProperties;
 
 			LOG_INFO("GPU: %s", context.gpuProperties.deviceName);
 

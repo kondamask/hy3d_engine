@@ -5,7 +5,8 @@
             "includePath": [
                 "${default}",
                 "${workspaceFolder}/src/**",
-                "D:/.DEV/VulkanSDK/1.3.204.1/Include"
+                "D:/.DEV/VulkanSDK/1.3.204.1/Include",
+                "C:/my_work/SDKs/VulkanSDK/1.3.216.0/Include"
             ],
             "defines": [
                 "_DEBUG",

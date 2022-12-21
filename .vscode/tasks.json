@@ -4,7 +4,7 @@
             "label": "Build All - Debug Mode",
             "type": "shell",
             "windows": {
-                "command": "./build Debug",
+                "command": "build Debug",
             },
             "group": "build",
         },
@@ -12,7 +12,7 @@
             "label": "Build Engine - Debug Mode",
             "type": "shell",
             "windows": {
-                "command": "./build Debug Engine",
+                "command": "build Debug Engine",
             },
             "group": "build"
         },
@@ -20,7 +20,7 @@
             "label": "Build Renderer - Debug Mode",
             "type": "shell",
             "windows": {
-                "command": "./build Debug Renderer",
+                "command": "build Debug Renderer",
             },
             "group": "build"
         },
@@ -28,7 +28,7 @@
             "label": "Build All - Release Mode",
             "type": "shell",
             "windows": {
-                "command": "./build Release",
+                "command": "build Release",
             },
             "group": "build"
         },
