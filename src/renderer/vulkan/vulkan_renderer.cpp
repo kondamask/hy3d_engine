@@ -40,7 +40,7 @@ namespace HY3D
 			result = CreateSwapchain();
 			ASSERT(result == true);
 
-			LOG_DEBUG(__FUNCTION__);
+			LOG_INFO(__FUNCTION__);
 			return true;
 		}
 
@@ -51,8 +51,10 @@ namespace HY3D
 
 		extern "C" HY3D_API RendererTerminateSignature(RendererTerminate)
 		{
+			// vkDestroyInstance(context.instance, 0);
+
 			PlatformUnloadLibrary(&context.library);
-			LOG_DEBUG(__FUNCTION__);
+			LOG_INFO(__FUNCTION__);
 		}
 	} // namespace Vulkan
 } // namespace HY3D

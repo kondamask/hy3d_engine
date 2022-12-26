@@ -65,23 +65,22 @@ namespace HY3D
 
 				VkSuccessOrReturnFalse(vkEnumerateInstanceLayerProperties(&layerCount, availableLayers));
 
-				for (u32 i = 0; i < ArrayCount(instanceLayers); i++)
+				LOG_DEBUG("Required Instance Layers:");
+				for (char *desiredInstanceLayer : instanceLayers)
 				{
-					char* layerName = instanceLayers[i];
+					LOG_DEBUG("    %s", desiredInstanceLayer);
 					bool found = false;
 					for (VkLayerProperties& layerProperties : availableLayers)
 					{
-						if (strcmp(layerName, layerProperties.layerName) == 0)
+						if (strcmp(desiredInstanceLayer, layerProperties.layerName) == 0)
 						{
 							found = true;
 							break;
 						}
 					}
 					if (!found)
-					{
-						ASSERT(found);
-						return false;
-					}
+						LOG_ERROR("    %s - NOT SUPPORTED", desiredInstanceLayer);
+					ASSERT(found);
 				}
 			}
 
@@ -109,8 +108,10 @@ namespace HY3D
 			ASSERT(availableExtensionsCount <= ArrayCount(availableInstanceExtensions));
 			VkSuccessOrReturnFalse(vkEnumerateInstanceExtensionProperties(0, &availableExtensionsCount, availableInstanceExtensions));
 
+			LOG_DEBUG("Required Instance Extensions:");
 			for (char* desiredInstanceExtension : extensions)
 			{
+				LOG_DEBUG("    %s", desiredInstanceExtension);
 				bool found = false;
 				for (VkExtensionProperties& availableExtension : availableInstanceExtensions)
 				{
@@ -121,10 +122,8 @@ namespace HY3D
 					}
 				}
 				if (!found)
-				{
-					ASSERT(found);
-					return false;
-				}
+					LOG_ERROR("    %s - NOT SUPPORTED", desiredInstanceExtension);
+				ASSERT(found);
 			}
 
 			VkInstanceCreateInfo instanceInfo = {};
@@ -137,6 +136,13 @@ namespace HY3D
 				instanceInfo.enabledLayerCount = ArrayCount(instanceLayers);
 				instanceInfo.ppEnabledLayerNames = instanceLayers;
 			}
+
+			VkSuccessOrReturnFalse(vkCreateInstance(&instanceInfo, 0, &context.instance));
+
+			LOG_INFO(__FUNCTION__);
+
+			if (!LoadInstanceFunctions())
+				ASSERT(false);
 
 #if _DEBUG
 			VkDebugUtilsMessengerCreateInfoEXT debugMessengerInfo = {};
@@ -154,15 +160,12 @@ namespace HY3D
 			debugMessengerInfo.pfnUserCallback = DebugCallback;
 
 			instanceInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugMessengerInfo;
-#endif
 
-			VkSuccessOrReturnFalse(vkCreateInstance(&instanceInfo, 0, &context.instance));
-
-			if (!LoadInstanceFunctions())
-				ASSERT(false);
-#if _DEBUG
 			VkSuccessOrReturnFalse(vkCreateDebugUtilsMessengerEXT(context.instance, &debugMessengerInfo, 0, &context.debugMessenger));
+
+			LOG_DEBUG("Created Vulkan Debug Messenger");
 #endif
+
 			return true;
 		}
 
@@ -177,6 +180,7 @@ namespace HY3D
 			i32 bestGPUScore = -1;
 			i32 bestGPU = -1;
 
+			LOG_INFO("Available GPUs:");
 			VkPhysicalDeviceProperties gpuProperties = {};
 			VkPhysicalDeviceMemoryProperties gpuMemoryProperties = {};
 			for (u32 iGPU = 0; iGPU < gpuCount; iGPU++)
@@ -188,14 +192,19 @@ namespace HY3D
 				switch (gpuProperties.deviceType)
 				{
 				case VK_PHYSICAL_DEVICE_TYPE_OTHER:
+					LOG_INFO("    %s - UNKNOWN TYPE", gpuProperties.deviceName);
 					curGPUScore += 1; break;
 				case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:
+					LOG_INFO("    %s - VIRUTAL", gpuProperties.deviceName);
 					curGPUScore += 2; break;
 				case VK_PHYSICAL_DEVICE_TYPE_CPU:
+					LOG_INFO("    %s - CPU", gpuProperties.deviceName);
 					curGPUScore += 3; break;
 				case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
+					LOG_INFO("    %s - INTERGRATED", gpuProperties.deviceName);
 					curGPUScore += 4; break;
 				case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
+					LOG_INFO("    %s - DISCRETE", gpuProperties.deviceName);
 					curGPUScore += 5; break;
 				}
 
@@ -210,7 +219,7 @@ namespace HY3D
 			context.gpuProperties = gpuProperties;
 			context.gpuMemoryProperties = gpuMemoryProperties;
 
-			LOG_INFO("GPU: %s", context.gpuProperties.deviceName);
+			LOG_INFO("GPU Selected: %s", context.gpuProperties.deviceName);
 
 			return true;
 		}
@@ -255,6 +264,8 @@ namespace HY3D
 					desiredSurfaceFormatSupported = true;
 			}
 			ASSERT(desiredSurfaceFormatSupported);
+
+			LOG_INFO(__FUNCTION__);
 
 			return desiredSurfaceFormatSupported;
 		}
@@ -364,8 +375,11 @@ namespace HY3D
 			VkSuccessOrReturnFalse(vkEnumerateDeviceExtensionProperties(context.gpu, 0, &deviceExtensionsCount, 0));
 			ASSERT(deviceExtensionsCount <= ArrayCount(availableDeviceExtensions));
 			VkSuccessOrReturnFalse(vkEnumerateDeviceExtensionProperties(context.gpu, 0, &deviceExtensionsCount, availableDeviceExtensions));
+
+			LOG_DEBUG("Required Device Extensions:");
 			for (char* desiredDeviceExtension : desiredDeviceExtensions)
 			{
+				LOG_DEBUG("    %s", desiredDeviceExtension);
 				bool found = false;
 				for (VkExtensionProperties& availableExtension : availableDeviceExtensions)
 				{
@@ -375,6 +389,8 @@ namespace HY3D
 						break;
 					}
 				}
+				if (!found)
+					LOG_ERROR("    %s - NOT SUPPORTED", desiredDeviceExtension);
 				ASSERT(found);
 			}
 
@@ -400,6 +416,8 @@ namespace HY3D
 			deviceInfo.pNext = &descriptorIndexingFeatures;
 
 			VkSuccessOrReturnFalse(vkCreateDevice(context.gpu, &deviceInfo, 0, &context.device));
+
+			LOG_INFO(__FUNCTION__);
 
 			if (!LoadDeviceFunctions())
 			{
@@ -603,7 +621,8 @@ namespace HY3D
 
 			context.canRender = result;
 
-			LOG_DEBUG("Created swapchain");
+			LOG_INFO(__FUNCTION__);
+
 			return true;
 		}
 

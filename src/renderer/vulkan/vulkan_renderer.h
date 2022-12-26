@@ -49,6 +49,7 @@ namespace HY3D
 			VkImageView swapchainImageViews[NUM_SWAPCHAIN_IMAGES];
 			VkFramebuffer framebuffers[NUM_SWAPCHAIN_IMAGES];
 			u32 swapchainImageCount;
+			
 #if _DEBUG
 			VkDebugUtilsMessengerEXT debugMessenger;
 #endif
