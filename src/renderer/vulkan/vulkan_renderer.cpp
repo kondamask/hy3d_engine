@@ -37,15 +37,15 @@ namespace HY3D
 			result = CreateDevice();
 			ASSERT(result == true);
 
+			result = CreateSwapchain();
+			ASSERT(result == true);
+
 			LOG_DEBUG(__FUNCTION__);
 			return true;
 		}
 
 		extern "C" HY3D_API RendererDrawFrameSignature(RendererDrawFrame)
-		{
-			if (!CreateSwapchain())
-				return;
-				
+		{				
 			return;
 		}
 

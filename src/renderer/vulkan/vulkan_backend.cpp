@@ -481,7 +481,7 @@ namespace HY3D
 				uint32_t presentModeCount;
 				VkSuccessOrReturnFalse(vkGetPhysicalDeviceSurfacePresentModesKHR(context.gpu, context.surface, &presentModeCount, NULL));
 				VkPresentModeKHR presentModes[16] = {};
-				;
+
 				ASSERT(presentModeCount <= ArrayCount(presentModes));
 				VkSuccessOrReturnFalse(vkGetPhysicalDeviceSurfacePresentModesKHR(context.gpu, context.surface, &presentModeCount, presentModes));
 				bool desiredPresentModeSupported = false;
@@ -556,8 +556,9 @@ namespace HY3D
 				VkSwapchainKHR oldSwapchain = context.swapchain;
 				swapchainInfo.oldSwapchain = oldSwapchain;
 				VkSuccessOrReturnFalse(vkCreateSwapchainKHR(context.device, &swapchainInfo, 0, &context.swapchain));
-				VkGoodHandleOrReturnFalse(oldSwapchain);
-				vkDestroySwapchainKHR(context.device, oldSwapchain, 0);
+
+				if (VkGoodHandle(oldSwapchain))
+					vkDestroySwapchainKHR(context.device, oldSwapchain, 0);
 			}
 
 			// NOTE: Create the Image views
