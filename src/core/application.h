@@ -18,20 +18,17 @@ namespace HY3D
 		const char* name;
 	};
 
-	struct application_state
-	{
-		engine engine;
-		renderer renderer;
-		bool isInitialized;
-		bool isSuspended;
-		i32 width;
-		i32 height;
-		platform_state platformState;
-	};
-
 	namespace Application
 	{
-		global_var application_state state;
+		global_var struct {
+			engine engine;
+			renderer renderer;
+			bool isInitialized;
+			bool isSuspended;
+			i32 width;
+			i32 height;
+			platform_state platformState;
+		} state;
 	}
 
 	bool ApplicationInitialize(application_config* appInfo);
