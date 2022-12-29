@@ -249,6 +249,7 @@ namespace HY3D
 			VkSuccessOrReturnFalse(vkCreateXlibSurfaceKHR(context->instance, &surfaceInfo, 0, &context->surface));
 #endif
 
+			// TODO:  Check if supported?
 			context->surfaceFormat.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
 			context->surfaceFormat.format = VK_FORMAT_B8G8R8A8_UNORM;
 
@@ -511,11 +512,11 @@ namespace HY3D
 			// depthAttachmentRef.attachment = 1;
 			// depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-			// NOTEcontext->: Specify the subpasses
+			// NOTE: Specify the subpasses
 			VkSubpassDescription subpass = {};
 			subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 
-			// NOTEcontext->: The index of the color attachment in this array is directly
+			// NOTE: The index of the color attachment in this array is directly
 			// referenced from the fragment shader with the layout(location = 0) out vec4 outColor directive!
 			subpass.colorAttachmentCount = 1; // ArrayCount(colorAttachementRef)
 			subpass.pColorAttachments = &colorAttachementRef;
@@ -556,7 +557,7 @@ namespace HY3D
 			{
 				colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-				// NOTEcontext->: attachment to resolve the multisamplerd image into a presentable image
+				// NOTE: context->: attachment to resolve the multisamplerd image into a presentable image
 				VkAttachmentDescription colorAttachmentResolve = {};
 				colorAttachmentResolve.format = context->surfaceFormat.format;
 				colorAttachmentResolve.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -867,6 +868,107 @@ namespace HY3D
 			VkSuccessOrReturnFalse(vkResetFences(context->device, 1, &result->fence));
 
 			return result;
+		}
+
+		static_func void DestroyPipeline()
+		{
+			
+		}
+
+		static_func bool CreateGraphicsPipeline()
+		{
+			VkGraphicsPipelineCreateInfo graphicsPipelineInfo = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
+
+			VkShaderModuleCreateInfo vertShaderModuleInfo = { VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
+			read_file_result vertShaderFile = PlatformReadFile("bin\\shaders\\triangle.vert.spv");
+			vertShaderModuleInfo.pCode = (u32*)vertShaderFile.content;
+			vertShaderModuleInfo.codeSize = vertShaderFile.size;
+			VkShaderModule vertShaderModule;
+			VkSuccessOrReturnFalse(vkCreateShaderModule(context->device, &vertShaderModuleInfo, 0, &vertShaderModule));
+
+			VkShaderModuleCreateInfo fragShaderModuleInfo = { VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
+			read_file_result fragShaderFile = PlatformReadFile("bin\\shaders\\triangle.frag.spv");
+			fragShaderModuleInfo.pCode = (u32*)fragShaderFile.content;
+			fragShaderModuleInfo.codeSize = fragShaderFile.size;
+			VkShaderModule fragShaderModule;
+			VkSuccessOrReturnFalse(vkCreateShaderModule(context->device, &fragShaderModuleInfo, 0, &fragShaderModule));
+
+			VkPipelineShaderStageCreateInfo stages[] = {
+				{
+					VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+					0,
+					0,
+					VK_SHADER_STAGE_VERTEX_BIT,
+					vertShaderModule,
+					"main",
+				},
+				{
+					VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+					0,
+					0,
+					VK_SHADER_STAGE_FRAGMENT_BIT,
+					fragShaderModule,
+					"main",
+				}
+			};
+			graphicsPipelineInfo.pStages = stages;
+			graphicsPipelineInfo.stageCount = ArrayCount(stages);
+
+			VkPipelineVertexInputStateCreateInfo vertInput = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
+			graphicsPipelineInfo.pVertexInputState = &vertInput;
+
+			VkPipelineInputAssemblyStateCreateInfo inputAssembly = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
+			inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+			graphicsPipelineInfo.pInputAssemblyState = &inputAssembly;
+
+			VkPipelineViewportStateCreateInfo viewportInfo = { VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
+			viewportInfo.scissorCount = 1;
+			viewportInfo.viewportCount = 1;
+			graphicsPipelineInfo.pViewportState = &viewportInfo;
+
+			VkPipelineRasterizationStateCreateInfo rasterizationState = { VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
+			graphicsPipelineInfo.pRasterizationState = &rasterizationState;
+
+			VkPipelineMultisampleStateCreateInfo multisampleState = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
+			multisampleState.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+			graphicsPipelineInfo.pMultisampleState = &multisampleState;
+
+			VkPipelineDepthStencilStateCreateInfo depthStenticState = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
+			graphicsPipelineInfo.pDepthStencilState = &depthStenticState;
+
+			VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
+			colorBlendAttachment.colorWriteMask =
+				VK_COLOR_COMPONENT_R_BIT |
+				VK_COLOR_COMPONENT_G_BIT |
+				VK_COLOR_COMPONENT_B_BIT |
+				VK_COLOR_COMPONENT_A_BIT;
+
+			VkPipelineColorBlendStateCreateInfo colorBlendState = { VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
+			colorBlendState.attachmentCount = 1;
+			colorBlendState.pAttachments = &colorBlendAttachment;
+			graphicsPipelineInfo.pColorBlendState = &colorBlendState;
+
+			VkDynamicState dynamicStates[] = {
+				VK_DYNAMIC_STATE_VIEWPORT,
+				VK_DYNAMIC_STATE_SCISSOR
+			};
+
+			VkPipelineDynamicStateCreateInfo dynamicStatesInfo = { VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO };
+			dynamicStatesInfo.dynamicStateCount = ArrayCount(dynamicStates);
+			dynamicStatesInfo.pDynamicStates = dynamicStates;
+
+			graphicsPipelineInfo.pDynamicState = &dynamicStatesInfo;
+
+			VkPipelineLayoutCreateInfo pipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
+			VkPipelineLayout pipelineLayout;
+			VkSuccessOrReturnFalse(vkCreatePipelineLayout(context->device, &pipelineLayoutInfo, 0, &pipelineLayout));
+			graphicsPipelineInfo.layout = pipelineLayout;
+
+			graphicsPipelineInfo.renderPass = context->renderPass;
+
+			VkSuccessOrReturnFalse(vkCreateGraphicsPipelines(context->device, 0, 1, &graphicsPipelineInfo, 0, &context->pipeline));
+
+			return true;
 		}
 	} // namespace Vulkan
 } // namespace HY3D

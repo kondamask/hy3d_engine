@@ -46,6 +46,9 @@ namespace HY3D
 			result = CreateSwapchain();
 			ASSERT(result == true);
 
+			result = CreateGraphicsPipeline();
+			ASSERT(result == true);
+
 			LOG_INFO(__FUNCTION__);
 
 			context->isInitialized = true;
@@ -95,8 +98,17 @@ namespace HY3D
 			vkBeginCommandBuffer(res->cmdBuffer, &commandBufferBeginInfo);
 
 			vkCmdBeginRenderPass(res->cmdBuffer, &renderpassInfo, VK_SUBPASS_CONTENTS_INLINE);
-			vkCmdEndRenderPass(res->cmdBuffer);
 
+			VkViewport viewport = {0, (f32)context->windowExtent.height, (f32)context->windowExtent.width, -(f32)context->windowExtent.height};
+			vkCmdSetViewport(res->cmdBuffer, 0, 1, &viewport);
+
+			VkRect2D scissor = {{0, 0}, {context->windowExtent.width, context->windowExtent.height}};
+			vkCmdSetScissor(res->cmdBuffer, 0, 1, &scissor);
+
+			vkCmdBindPipeline(res->cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, context->pipeline);
+			vkCmdDraw(res->cmdBuffer, 3, 1, 0, 0);
+
+			vkCmdEndRenderPass(res->cmdBuffer);
 			vkEndCommandBuffer(res->cmdBuffer);
 
 			local_var VkPipelineStageFlags waitDestStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;

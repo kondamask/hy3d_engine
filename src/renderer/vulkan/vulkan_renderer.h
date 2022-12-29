@@ -62,6 +62,8 @@ namespace HY3D
 			VkCommandPool cmdBufferPool;
 			cmd_resources cmdResources[NUM_RESOURCES];
 			u32 currentCmdResource = 0;
+
+			VkPipeline pipeline;
 			
 			bool isInitialized = false;
 #if _DEBUG
@@ -69,7 +71,6 @@ namespace HY3D
 #endif
 		} *context;
 	} // namespace Vulkan
-
 } // namespace HY3D
 
 
