@@ -18,7 +18,7 @@ namespace HY3D
 		RENDERER_API_DIRECTX,
 	};
 
-	
+
 	struct render_packet
 	{
 		f64 dt;
@@ -26,15 +26,23 @@ namespace HY3D
 
 #define RendererInitializeSignature(name) bool name(platform_state *platformState)
 	typedef RendererInitializeSignature(_RendererInitialize);
-#define pfnRendererInitialize _RendererInitialize *
+#define pfnRendererInitialize _RendererInitialize*
+
+#define RendererOnReloadSignature(name) void name()
+	typedef RendererOnReloadSignature(_RendererOnReload);
+#define pfnRendererOnReload _RendererOnReload*
+
+#define RendererSetApiContextSignature(name) void name(void** apiContext)
+	typedef RendererSetApiContextSignature(_RendererSetApiContext);
+#define pfnRendererSetApiContext _RendererSetApiContext*
 
 #define RendererDrawFrameSignature(name) void name(render_packet *packet)
 	typedef RendererDrawFrameSignature(_RendererDrawFrame);
-#define pfnRendererDrawFrame _RendererDrawFrame *
+#define pfnRendererDrawFrame _RendererDrawFrame*
 
 #define RendererTerminateSignature(name) void name()
 	typedef RendererTerminateSignature(_RendererTerminate);
-#define pfnRendererTerminate _RendererTerminate *
+#define pfnRendererTerminate _RendererTerminate*
 
 	struct renderer
 	{
@@ -43,6 +51,8 @@ namespace HY3D
 		pfnRendererInitialize Initialize;
 		pfnRendererDrawFrame DrawFrame;
 		pfnRendererTerminate Terminate;
+
+		void* apiContext;
 	};
 
 } // namespace HY3D

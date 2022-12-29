@@ -38,7 +38,7 @@ namespace HY3D
 				EngineLoadCode(&Application::state.engine);
 				
 			if (PlatformUpdatedDynamicLibrary(&Application::state.renderer.library))
-				RendererLoadCode(&Application::state.renderer,  RENDERER_API_VULKAN);
+				RendererLoadCode(&Application::state.renderer, RENDERER_API_VULKAN);
 
 			if (!Application::state.isSuspended)
 			{

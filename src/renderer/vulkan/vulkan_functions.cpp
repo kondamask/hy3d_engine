@@ -32,7 +32,7 @@ namespace HY3D
 			VulkanLoadGlobalFunc(vkCreateInstance);
 			VulkanLoadGlobalFunc(vkEnumerateInstanceLayerProperties);
 			VulkanLoadGlobalFunc(vkEnumerateInstanceExtensionProperties);
-			
+
 			LOG_DEBUG(__FUNCTION__);
 			return true;
 		}
@@ -63,7 +63,7 @@ namespace HY3D
 		VulkanDeclareFunction(vkGetDeviceProcAddr);
 
 #define VulkanLoadInstanceFunc(func)                                                  \
-	func = (VulkanFuncPtr(func))vkGetInstanceProcAddr(context.instance, #func); \
+	func = (VulkanFuncPtr(func))vkGetInstanceProcAddr(context->instance, #func); \
 	if (!(func)) { return false; }
 
 		static_func bool LoadInstanceFunctions()
@@ -175,7 +175,7 @@ namespace HY3D
 		VulkanDeclareFunction(vkCmdBlitImage);
 
 #define VulkanLoadDeviceFunc(func) 											  	   \
-	func = (VulkanFuncPtr(func))vkGetDeviceProcAddr(context.device, #func); \
+	func = (VulkanFuncPtr(func))vkGetDeviceProcAddr(context->device, #func); \
 	if (!(func)) { return false; }
 
 		static_func bool LoadDeviceFunctions()

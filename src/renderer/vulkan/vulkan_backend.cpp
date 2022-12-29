@@ -136,7 +136,7 @@ namespace HY3D
 			instanceInfo.ppEnabledLayerNames = instanceLayers;
 #endif
 
-			VkSuccessOrReturnFalse(vkCreateInstance(&instanceInfo, 0, &context.instance));
+			VkSuccessOrReturnFalse(vkCreateInstance(&instanceInfo, 0, &context->instance));
 
 			LOG_INFO(__FUNCTION__);
 
@@ -160,7 +160,7 @@ namespace HY3D
 
 			instanceInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugMessengerInfo;
 
-			VkSuccessOrReturnFalse(vkCreateDebugUtilsMessengerEXT(context.instance, &debugMessengerInfo, 0, &context.debugMessenger));
+			VkSuccessOrReturnFalse(vkCreateDebugUtilsMessengerEXT(context->instance, &debugMessengerInfo, 0, &context->debugMessenger));
 
 			LOG_DEBUG("Created Vulkan Debug Messenger");
 #endif
@@ -172,9 +172,9 @@ namespace HY3D
 		{
 			u32 gpuCount = 0;
 			VkPhysicalDevice gpuBuffer[16] = {};
-			VkSuccessOrReturnFalse(vkEnumeratePhysicalDevices(context.instance, &gpuCount, 0));
+			VkSuccessOrReturnFalse(vkEnumeratePhysicalDevices(context->instance, &gpuCount, 0));
 			ASSERT(gpuCount > 0 && gpuCount <= ArrayCount(gpuBuffer));
-			VkSuccessOrReturnFalse(vkEnumeratePhysicalDevices(context.instance, &gpuCount, gpuBuffer));
+			VkSuccessOrReturnFalse(vkEnumeratePhysicalDevices(context->instance, &gpuCount, gpuBuffer));
 
 			i32 bestGPU = -1;
 			i32 bestGPUScore = -1;
@@ -218,11 +218,11 @@ namespace HY3D
 				}
 			}
 
-			context.gpu = gpuBuffer[bestGPU];
-			context.gpuProperties = bestGPUProperties;
-			context.gpuMemoryProperties = bestGPUMemoryProperties;
+			context->gpu = gpuBuffer[bestGPU];
+			context->gpuProperties = bestGPUProperties;
+			context->gpuMemoryProperties = bestGPUMemoryProperties;
 
-			LOG_INFO("GPU Selected: %s", context.gpuProperties.deviceName);
+			LOG_INFO("GPU Selected: %s", context->gpuProperties.deviceName);
 
 			return true;
 		}
@@ -232,38 +232,38 @@ namespace HY3D
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
 			VkWin32SurfaceCreateInfoKHR surfaceInfo = { VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR };
 			PlatformCreateVulkanSurface(platformState, &surfaceInfo);
-			VkSuccessOrReturnFalse(vkCreateWin32SurfaceKHR(context.instance, &surfaceInfo, 0, &context.surface));
+			VkSuccessOrReturnFalse(vkCreateWin32SurfaceKHR(context->instance, &surfaceInfo, 0, &context->surface));
 
 #elif defined(VK_USE_PLATFORM_XCB_KHR)
 			VkXcbSurfaceCreateInfoKHR surfaceInfo = {};
 			surfaceInfo.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
 			surfaceInfo.connection = 0; // we'll have these if we implement a linux window
 			surfaceInfo.window = 0;		// we'll have these if we implement a linux window
-			VkSuccessOrReturnFalse(vkCreateXcbSurfaceKHR(context.instance, &surfaceInfo, 0, &context.surface));
+			VkSuccessOrReturnFalse(vkCreateXcbSurfaceKHR(context->instance, &surfaceInfo, 0, &context->surface));
 
 #elif defined(VK_USE_PLATFORM_XLIB_KHR)
 			VkXcbSurfaceCreateInfoKHR surfaceInfo = {};
 			surfaceInfo.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
 			surfaceInfo.dpy = 0;	// we'll have these if we implement a mac(?) window
 			surfaceInfo.window = 0; // we'll have these if we implement a mac(?) window
-			VkSuccessOrReturnFalse(vkCreateXlibSurfaceKHR(context.instance, &surfaceInfo, 0, &context.surface));
+			VkSuccessOrReturnFalse(vkCreateXlibSurfaceKHR(context->instance, &surfaceInfo, 0, &context->surface));
 #endif
 
-			context.surfaceFormat.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-			context.surfaceFormat.format = VK_FORMAT_B8G8R8A8_UNORM;
+			context->surfaceFormat.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+			context->surfaceFormat.format = VK_FORMAT_B8G8R8A8_UNORM;
 
 			u32 formatCount = 0;
 			VkSurfaceFormatKHR availableFormats[16] = {};
 			bool desiredSurfaceFormatSupported = false;
-			VkSuccessOrReturnFalse(vkGetPhysicalDeviceSurfaceFormatsKHR(context.gpu, context.surface, &formatCount, 0));
+			VkSuccessOrReturnFalse(vkGetPhysicalDeviceSurfaceFormatsKHR(context->gpu, context->surface, &formatCount, 0));
 			ASSERT(formatCount <= ArrayCount(availableFormats));
 
 			for (u32 i = 0; i < formatCount; ++i)
-				VkSuccessOrReturnFalse(vkGetPhysicalDeviceSurfaceFormatsKHR(context.gpu, context.surface, &formatCount, &availableFormats[i]));
+				VkSuccessOrReturnFalse(vkGetPhysicalDeviceSurfaceFormatsKHR(context->gpu, context->surface, &formatCount, &availableFormats[i]));
 			for (u32 i = 0; i < formatCount; ++i)
 			{
-				if (context.surfaceFormat.format == availableFormats[i].format &&
-					context.surfaceFormat.colorSpace == availableFormats[i].colorSpace)
+				if (context->surfaceFormat.format == availableFormats[i].format &&
+					context->surfaceFormat.colorSpace == availableFormats[i].colorSpace)
 					desiredSurfaceFormatSupported = true;
 			}
 			ASSERT(desiredSurfaceFormatSupported);
@@ -275,19 +275,19 @@ namespace HY3D
 
 		static_func bool PickCommandQueues()
 		{
-			context.graphicsQueueFamilyIndex = UINT32_MAX;
-			context.presentQueueFamilyIndex = UINT32_MAX;
-			context.transferQueueFamilyIndex = UINT32_MAX;
+			context->graphicsQueueFamilyIndex = UINT32_MAX;
+			context->presentQueueFamilyIndex = UINT32_MAX;
+			context->transferQueueFamilyIndex = UINT32_MAX;
 			{
 				u32 queueFamilyCount;
 				VkQueueFamilyProperties availableQueueFamilies[16] = {};
 				VkBool32 supportsPresent[16] = {};
-				vkGetPhysicalDeviceQueueFamilyProperties(context.gpu, &queueFamilyCount, 0);
+				vkGetPhysicalDeviceQueueFamilyProperties(context->gpu, &queueFamilyCount, 0);
 				ASSERT(queueFamilyCount <= ArrayCount(availableQueueFamilies));
-				vkGetPhysicalDeviceQueueFamilyProperties(context.gpu, &queueFamilyCount, availableQueueFamilies);
+				vkGetPhysicalDeviceQueueFamilyProperties(context->gpu, &queueFamilyCount, availableQueueFamilies);
 
 				for (u32 i = 0; i < queueFamilyCount; i++)
-					VkSuccessOrReturnFalse(vkGetPhysicalDeviceSurfaceSupportKHR(context.gpu, i, context.surface, &supportsPresent[i]));
+					VkSuccessOrReturnFalse(vkGetPhysicalDeviceSurfaceSupportKHR(context->gpu, i, context->surface, &supportsPresent[i]));
 
 #if _DEBUG
 				LOG_DEBUG("Available Queue Families:");
@@ -311,28 +311,28 @@ namespace HY3D
 				{
 					if (availableQueueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
 					{
-						if (context.graphicsQueueFamilyIndex == UINT32_MAX)
-							context.graphicsQueueFamilyIndex = i;
+						if (context->graphicsQueueFamilyIndex == UINT32_MAX)
+							context->graphicsQueueFamilyIndex = i;
 						if (supportsPresent[i] == VK_TRUE)
 						{
-							context.graphicsQueueFamilyIndex = i;
-							context.presentQueueFamilyIndex = i;
+							context->graphicsQueueFamilyIndex = i;
+							context->presentQueueFamilyIndex = i;
 							break;
 						}
 					}
 				}
 
-				ASSERT(context.graphicsQueueFamilyIndex != UINT32_MAX);
-				ASSERT(context.graphicsQueueFamilyIndex == context.presentQueueFamilyIndex);
-				LOG_INFO("Graphics Queue Family Selected: %d", context.graphicsQueueFamilyIndex);
-				LOG_INFO("Present Queue Family Selected: %d", context.presentQueueFamilyIndex);
+				ASSERT(context->graphicsQueueFamilyIndex != UINT32_MAX);
+				ASSERT(context->graphicsQueueFamilyIndex == context->presentQueueFamilyIndex);
+				LOG_INFO("Graphics Queue Family Selected: %d", context->graphicsQueueFamilyIndex);
+				LOG_INFO("Present Queue Family Selected: %d", context->presentQueueFamilyIndex);
 
-				// if (context.presentQueueFamilyIndex == UINT32_MAX) // didn't find a queue that supports both graphics and present
+				// if (context->presentQueueFamilyIndex == UINT32_MAX) // didn't find a queue that supports both graphics and present
 				// {
 				// 	for (u32 i = 0; i < queueFamilyCount; ++i)
 				// 		if (supportsPresent[i] == VK_TRUE)
 				// 		{
-				// 			context.presentQueueFamilyIndex = i;
+				// 			context->presentQueueFamilyIndex = i;
 				// 			break;
 				// 		}
 				// }
@@ -342,26 +342,26 @@ namespace HY3D
 				{
 					if (availableQueueFamilies[i].queueFlags & VK_QUEUE_TRANSFER_BIT)
 					{
-						if (context.transferQueueFamilyIndex == UINT32_MAX)
-							context.transferQueueFamilyIndex = i;
+						if (context->transferQueueFamilyIndex == UINT32_MAX)
+							context->transferQueueFamilyIndex = i;
 					}
 					
 					if ((availableQueueFamilies[i].queueFlags & VK_QUEUE_TRANSFER_BIT) && 
 						!(availableQueueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) &&
-						context.graphicsQueueFamilyIndex != i)
+						context->graphicsQueueFamilyIndex != i)
 					{
-						context.transferQueueFamilyIndex = i;
+						context->transferQueueFamilyIndex = i;
 						break;
 					}
 				}
 
-				ASSERT(context.transferQueueFamilyIndex != UINT32_MAX);
-				LOG_INFO("Transfer Queue Family Selected: %d", context.transferQueueFamilyIndex);
+				ASSERT(context->transferQueueFamilyIndex != UINT32_MAX);
+				LOG_INFO("Transfer Queue Family Selected: %d", context->transferQueueFamilyIndex);
 			}
 
-			if (context.graphicsQueueFamilyIndex == UINT32_MAX ||
-				context.presentQueueFamilyIndex == UINT32_MAX ||
-				context.transferQueueFamilyIndex == UINT32_MAX)
+			if (context->graphicsQueueFamilyIndex == UINT32_MAX ||
+				context->presentQueueFamilyIndex == UINT32_MAX ||
+				context->transferQueueFamilyIndex == UINT32_MAX)
 				return false;
 
 			// TODO: Need to do some stuff if they are different like:
@@ -390,7 +390,7 @@ namespace HY3D
 
 			float queuePriority = 1.0; // must be array of size queueCount
 			queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-			queueInfo.queueFamilyIndex = context.graphicsQueueFamilyIndex;
+			queueInfo.queueFamilyIndex = context->graphicsQueueFamilyIndex;
 			queueInfo.queueCount = 1;
 			queueInfo.pQueuePriorities = &queuePriority;
 
@@ -401,9 +401,9 @@ namespace HY3D
 
 			u32 deviceExtensionsCount;
 			VkExtensionProperties availableDeviceExtensions[255] = {};
-			VkSuccessOrReturnFalse(vkEnumerateDeviceExtensionProperties(context.gpu, 0, &deviceExtensionsCount, 0));
+			VkSuccessOrReturnFalse(vkEnumerateDeviceExtensionProperties(context->gpu, 0, &deviceExtensionsCount, 0));
 			ASSERT(deviceExtensionsCount <= ArrayCount(availableDeviceExtensions));
-			VkSuccessOrReturnFalse(vkEnumerateDeviceExtensionProperties(context.gpu, 0, &deviceExtensionsCount, availableDeviceExtensions));
+			VkSuccessOrReturnFalse(vkEnumerateDeviceExtensionProperties(context->gpu, 0, &deviceExtensionsCount, availableDeviceExtensions));
 
 			LOG_DEBUG("Required Device Extensions:");
 			for (char* desiredDeviceExtension : desiredDeviceExtensions)
@@ -423,7 +423,7 @@ namespace HY3D
 				ASSERT(found);
 			}
 
-			// TODOcontext.: Check if these features are supported;
+			// TODOcontext->: Check if these features are supported;
 			VkPhysicalDeviceFeatures desiredFeatures = {};
 			desiredFeatures.samplerAnisotropy = VK_TRUE;
 			desiredFeatures.fillModeNonSolid = VK_TRUE;
@@ -444,7 +444,7 @@ namespace HY3D
 
 			deviceInfo.pNext = &descriptorIndexingFeatures;
 
-			VkSuccessOrReturnFalse(vkCreateDevice(context.gpu, &deviceInfo, 0, &context.device));
+			VkSuccessOrReturnFalse(vkCreateDevice(context->gpu, &deviceInfo, 0, &context->device));
 
 			LOG_INFO(__FUNCTION__);
 
@@ -453,31 +453,31 @@ namespace HY3D
 				return false;
 			}
 
-			vkGetDeviceQueue(context.device, context.graphicsQueueFamilyIndex, 0, &context.graphicsQueue);
-			vkGetDeviceQueue(context.device, context.presentQueueFamilyIndex, 0, &context.presentQueue);
+			vkGetDeviceQueue(context->device, context->graphicsQueueFamilyIndex, 0, &context->graphicsQueue);
+			vkGetDeviceQueue(context->device, context->presentQueueFamilyIndex, 0, &context->presentQueue);
 
 			return true;
 		}
 
 		static_func bool DestroySwapchainImages()
 		{
-			VkGoodHandleOrReturnFalse(context.device);
-			vkDeviceWaitIdle(context.device);
-			for (u32 i = 0; i < context.swapchainImageCount; i++)
+			VkGoodHandleOrReturnFalse(context->device);
+			vkDeviceWaitIdle(context->device);
+			for (u32 i = 0; i < context->swapchainImageCount; i++)
 			{
-				if (VkGoodHandle(context.swapchainImageViews[i]))
-					vkDestroyImageView(context.device, context.swapchainImageViews[i], 0);
+				if (VkGoodHandle(context->swapchainImageViews[i]))
+					vkDestroyImageView(context->device, context->swapchainImageViews[i], 0);
 			}
 			return true;
 		}
 
 		static_func void DestroyRenderPass()
 		{
-			if (VkGoodHandle(context.device))
+			if (VkGoodHandle(context->device))
 			{
-				vkDeviceWaitIdle(context.device);
-				if (VkGoodHandle(context.renderPass))
-					vkDestroyRenderPass(context.device, context.renderPass, 0);
+				vkDeviceWaitIdle(context->device);
+				if (VkGoodHandle(context->renderPass))
+					vkDestroyRenderPass(context->device, context->renderPass, 0);
 			}
 		}
 
@@ -487,8 +487,8 @@ namespace HY3D
 
 			VkAttachmentDescription colorAttachment = {};
 			colorAttachment.flags = 0;
-			colorAttachment.format = context.surfaceFormat.format;
-			colorAttachment.samples = context.msaaSamples;
+			colorAttachment.format = context->surfaceFormat.format;
+			colorAttachment.samples = context->msaaSamples;
 			colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 			colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 			colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -500,7 +500,7 @@ namespace HY3D
 
 			// VkAttachmentDescription depthAttachment = {};
 			// // depthAttachment.format = DEPTH_BUFFER_FORMAT;
-			// depthAttachment.samples = context.msaaSamples;
+			// depthAttachment.samples = context->msaaSamples;
 			// depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 			// depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 			// depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -511,11 +511,11 @@ namespace HY3D
 			// depthAttachmentRef.attachment = 1;
 			// depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-			// NOTEcontext.: Specify the subpasses
+			// NOTEcontext->: Specify the subpasses
 			VkSubpassDescription subpass = {};
 			subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 
-			// NOTEcontext.: The index of the color attachment in this array is directly
+			// NOTEcontext->: The index of the color attachment in this array is directly
 			// referenced from the fragment shader with the layout(location = 0) out vec4 outColor directive!
 			subpass.colorAttachmentCount = 1; // ArrayCount(colorAttachementRef)
 			subpass.pColorAttachments = &colorAttachementRef;
@@ -541,7 +541,7 @@ namespace HY3D
 			renderPassInfo.dependencyCount = 1;
 			renderPassInfo.pDependencies = &dependency;
 
-			if (context.msaaSamples == VK_SAMPLE_COUNT_1_BIT)
+			if (context->msaaSamples == VK_SAMPLE_COUNT_1_BIT)
 			{
 				colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 				VkAttachmentDescription attachments[] = { 
@@ -550,15 +550,15 @@ namespace HY3D
 				};
 				renderPassInfo.attachmentCount = ArrayCount(attachments);
 				renderPassInfo.pAttachments = attachments;
-				VkSuccessOrReturnFalse(vkCreateRenderPass(context.device, &renderPassInfo, 0, &context.renderPass));
+				VkSuccessOrReturnFalse(vkCreateRenderPass(context->device, &renderPassInfo, 0, &context->renderPass));
 			}
 			else
 			{
 				colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-				// NOTEcontext.: attachment to resolve the multisamplerd image into a presentable image
+				// NOTEcontext->: attachment to resolve the multisamplerd image into a presentable image
 				VkAttachmentDescription colorAttachmentResolve = {};
-				colorAttachmentResolve.format = context.surfaceFormat.format;
+				colorAttachmentResolve.format = context->surfaceFormat.format;
 				colorAttachmentResolve.samples = VK_SAMPLE_COUNT_1_BIT;
 				colorAttachmentResolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 				colorAttachmentResolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -579,7 +579,7 @@ namespace HY3D
 				};
 				renderPassInfo.attachmentCount = ArrayCount(attachments);
 				renderPassInfo.pAttachments = attachments;
-				VkSuccessOrReturnFalse(vkCreateRenderPass(context.device, &renderPassInfo, 0, &context.renderPass));
+				VkSuccessOrReturnFalse(vkCreateRenderPass(context->device, &renderPassInfo, 0, &context->renderPass));
 			}
 
 			LOG_INFO(__FUNCTION__);
@@ -588,15 +588,15 @@ namespace HY3D
 
 		static_func void DestroyFramebuffers()
 		{
-			if (VkGoodHandle(context.device))
+			if (VkGoodHandle(context->device))
 			{
-				vkDeviceWaitIdle(context.device);
+				vkDeviceWaitIdle(context->device);
 				for (u32 i = 0; i < NUM_SWAPCHAIN_IMAGES; i++)
 				{
-					if (VkGoodHandle(context.framebuffers[i]))
+					if (VkGoodHandle(context->framebuffers[i]))
 					{
-						vkDestroyFramebuffer(context.device, context.framebuffers[i], 0);
-						// context.framebuffers[i] = VK_NULL_HANDLE;
+						vkDestroyFramebuffer(context->device, context->framebuffers[i], 0);
+						// context->framebuffers[i] = VK_NULL_HANDLE;
 					}
 				}
 			}
@@ -608,32 +608,32 @@ namespace HY3D
 
 			local_var VkFramebufferCreateInfo framebufferInfo = {};
 			framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-			framebufferInfo.renderPass = context.renderPass;
-			framebufferInfo.width = context.windowExtent.width;
-			framebufferInfo.height = context.windowExtent.height;
+			framebufferInfo.renderPass = context->renderPass;
+			framebufferInfo.width = context->windowExtent.width;
+			framebufferInfo.height = context->windowExtent.height;
 			framebufferInfo.layers = 1;
 			for (u32 i = 0; i < NUM_SWAPCHAIN_IMAGES; i++)
 			{
-				if (context.msaaSamples == VK_SAMPLE_COUNT_1_BIT)
+				if (context->msaaSamples == VK_SAMPLE_COUNT_1_BIT)
 				{
 					VkImageView attachments[] = { 
-						context.swapchainImageViews[i],
-						// context.depthBuffer.view
+						context->swapchainImageViews[i],
+						// context->depthBuffer.view
 					};
 					framebufferInfo.pAttachments = attachments;
 					framebufferInfo.attachmentCount = ArrayCount(attachments);
-					VkSuccessOrReturnFalse(vkCreateFramebuffer(context.device, &framebufferInfo, 0, &context.framebuffers[i]));
+					VkSuccessOrReturnFalse(vkCreateFramebuffer(context->device, &framebufferInfo, 0, &context->framebuffers[i]));
 				}
 				else
 				{
 					VkImageView attachments[] = {
-						// context.msaa.view,
-						// context.depthBuffer.view,
-						context.swapchainImageViews[i]
+						// context->msaa.view,
+						// context->depthBuffer.view,
+						context->swapchainImageViews[i]
 					};
 					framebufferInfo.pAttachments = attachments;
 					framebufferInfo.attachmentCount = ArrayCount(attachments);
-					VkSuccessOrReturnFalse(vkCreateFramebuffer(context.device, &framebufferInfo, 0, &context.framebuffers[i]));
+					VkSuccessOrReturnFalse(vkCreateFramebuffer(context->device, &framebufferInfo, 0, &context->framebuffers[i]));
 				}
 			}
 
@@ -645,37 +645,37 @@ namespace HY3D
 		{
 			bool result = true;
 
-			VkGoodHandleOrReturnFalse(context.device);
-			vkDeviceWaitIdle(context.device);
+			VkGoodHandleOrReturnFalse(context->device);
+			vkDeviceWaitIdle(context->device);
 
-			context.canRender = false;
+			context->canRender = false;
 
 			// NOTE: Get Surface capabilities
 			{
 				VkSurfaceCapabilitiesKHR surfCapabilities = {};
-				VkSuccessOrReturnFalse(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(context.gpu, context.surface, &surfCapabilities));
+				VkSuccessOrReturnFalse(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(context->gpu, context->surface, &surfCapabilities));
 
-				context.windowExtent = {};
+				context->windowExtent = {};
 				if (surfCapabilities.currentExtent.width == UINT32_MAX)
 				{
-					context.windowExtent.width = 640;
-					context.windowExtent.height = 480;
+					context->windowExtent.width = 640;
+					context->windowExtent.height = 480;
 
-					if (context.windowExtent.width < surfCapabilities.minImageExtent.width)
-						context.windowExtent.width = surfCapabilities.minImageExtent.width;
-					else if (context.windowExtent.width > surfCapabilities.maxImageExtent.width)
-						context.windowExtent.width = surfCapabilities.maxImageExtent.width;
+					if (context->windowExtent.width < surfCapabilities.minImageExtent.width)
+						context->windowExtent.width = surfCapabilities.minImageExtent.width;
+					else if (context->windowExtent.width > surfCapabilities.maxImageExtent.width)
+						context->windowExtent.width = surfCapabilities.maxImageExtent.width;
 
-					if (context.windowExtent.height < surfCapabilities.minImageExtent.height)
-						context.windowExtent.height = surfCapabilities.minImageExtent.height;
-					else if (context.windowExtent.height > surfCapabilities.maxImageExtent.height)
-						context.windowExtent.height = surfCapabilities.maxImageExtent.height;
+					if (context->windowExtent.height < surfCapabilities.minImageExtent.height)
+						context->windowExtent.height = surfCapabilities.minImageExtent.height;
+					else if (context->windowExtent.height > surfCapabilities.maxImageExtent.height)
+						context->windowExtent.height = surfCapabilities.maxImageExtent.height;
 				}
 				else
 				{ // If the surface size is defined, the swap chain size must match
-					context.windowExtent = surfCapabilities.currentExtent;
+					context->windowExtent = surfCapabilities.currentExtent;
 				}
-				if ((context.windowExtent.width == 0) || (context.windowExtent.height == 0))
+				if ((context->windowExtent.width == 0) || (context->windowExtent.height == 0))
 				{
 					return true;
 				}
@@ -684,7 +684,7 @@ namespace HY3D
 				// Constant at 2 for now: Double buffering
 				ASSERT(NUM_SWAPCHAIN_IMAGES >= surfCapabilities.minImageCount);
 				ASSERT(NUM_SWAPCHAIN_IMAGES <= surfCapabilities.maxImageCount);
-				context.swapchainImageCount = NUM_SWAPCHAIN_IMAGES;
+				context->swapchainImageCount = NUM_SWAPCHAIN_IMAGES;
 
 				// NOTE: Determine the pre-transform
 				VkSurfaceTransformFlagBitsKHR desiredPreTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR; // do nothing
@@ -696,11 +696,11 @@ namespace HY3D
 				// The FIFO present mode is guaranteed by the spec to be supported
 
 				uint32_t presentModeCount;
-				VkSuccessOrReturnFalse(vkGetPhysicalDeviceSurfacePresentModesKHR(context.gpu, context.surface, &presentModeCount, NULL));
+				VkSuccessOrReturnFalse(vkGetPhysicalDeviceSurfacePresentModesKHR(context->gpu, context->surface, &presentModeCount, NULL));
 				VkPresentModeKHR presentModes[16] = {};
 
 				ASSERT(presentModeCount <= ArrayCount(presentModes));
-				VkSuccessOrReturnFalse(vkGetPhysicalDeviceSurfacePresentModesKHR(context.gpu, context.surface, &presentModeCount, presentModes));
+				VkSuccessOrReturnFalse(vkGetPhysicalDeviceSurfacePresentModesKHR(context->gpu, context->surface, &presentModeCount, presentModes));
 				bool desiredPresentModeSupported = false;
 				for (u32 i = 0; i < presentModeCount; i++)
 				{
@@ -742,20 +742,20 @@ namespace HY3D
 				// NOTE: Make the actual swapchain
 				VkSwapchainCreateInfoKHR swapchainInfo = {};
 				swapchainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-				swapchainInfo.surface = context.surface;
-				swapchainInfo.imageExtent = context.windowExtent;
-				swapchainInfo.imageFormat = context.surfaceFormat.format;
-				swapchainInfo.imageColorSpace = context.surfaceFormat.colorSpace;
+				swapchainInfo.surface = context->surface;
+				swapchainInfo.imageExtent = context->windowExtent;
+				swapchainInfo.imageFormat = context->surfaceFormat.format;
+				swapchainInfo.imageColorSpace = context->surfaceFormat.colorSpace;
 				swapchainInfo.imageArrayLayers = 1;
 				swapchainInfo.imageUsage = desiredImageUsageFlags;
-				swapchainInfo.minImageCount = context.swapchainImageCount;
+				swapchainInfo.minImageCount = context->swapchainImageCount;
 				swapchainInfo.preTransform = desiredPreTransform;
 				swapchainInfo.compositeAlpha = desiredCompositeAlpha;
 				swapchainInfo.presentMode = desiredPresentMode;
 				swapchainInfo.clipped = true;
 
-				u32 queueFamilyIndices[2] = { context.graphicsQueueFamilyIndex, context.presentQueueFamilyIndex };
-				if (context.graphicsQueueFamilyIndex != context.presentQueueFamilyIndex)
+				u32 queueFamilyIndices[2] = { context->graphicsQueueFamilyIndex, context->presentQueueFamilyIndex };
+				if (context->graphicsQueueFamilyIndex != context->presentQueueFamilyIndex)
 				{
 					// If the graphics and present queues are from different queue families,
 					// we either have to explicitly transfer ownership of images between
@@ -770,12 +770,12 @@ namespace HY3D
 					swapchainInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 				}
 
-				VkSwapchainKHR oldSwapchain = context.swapchain;
+				VkSwapchainKHR oldSwapchain = context->swapchain;
 				swapchainInfo.oldSwapchain = oldSwapchain;
-				VkSuccessOrReturnFalse(vkCreateSwapchainKHR(context.device, &swapchainInfo, 0, &context.swapchain));
+				VkSuccessOrReturnFalse(vkCreateSwapchainKHR(context->device, &swapchainInfo, 0, &context->swapchain));
 
 				if (VkGoodHandle(oldSwapchain))
-					vkDestroySwapchainKHR(context.device, oldSwapchain, 0);
+					vkDestroySwapchainKHR(context->device, oldSwapchain, 0);
 			}
 
 			// NOTE: Create the Image views
@@ -785,14 +785,14 @@ namespace HY3D
 					LOG_ERROR("Failed to clear swapchain images.");
 					return false;
 				}
-				VkSuccessOrReturnFalse(vkGetSwapchainImagesKHR(context.device, context.swapchain, &context.swapchainImageCount, 0));
-				ASSERT(context.swapchainImageCount == ArrayCount(context.swapchainImages));
-				VkSuccessOrReturnFalse(vkGetSwapchainImagesKHR(context.device, context.swapchain, &context.swapchainImageCount, context.swapchainImages));
+				VkSuccessOrReturnFalse(vkGetSwapchainImagesKHR(context->device, context->swapchain, &context->swapchainImageCount, 0));
+				ASSERT(context->swapchainImageCount == ArrayCount(context->swapchainImages));
+				VkSuccessOrReturnFalse(vkGetSwapchainImagesKHR(context->device, context->swapchain, &context->swapchainImageCount, context->swapchainImages));
 
 				VkImageViewCreateInfo imageViewInfo = {};
 				imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 				imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-				imageViewInfo.format = context.surfaceFormat.format;
+				imageViewInfo.format = context->surfaceFormat.format;
 				imageViewInfo.components.r = VK_COMPONENT_SWIZZLE_R;
 				imageViewInfo.components.g = VK_COMPONENT_SWIZZLE_G;
 				imageViewInfo.components.b = VK_COMPONENT_SWIZZLE_B;
@@ -802,10 +802,10 @@ namespace HY3D
 				imageViewInfo.subresourceRange.levelCount = 1;
 				imageViewInfo.subresourceRange.baseArrayLayer = 0;
 				imageViewInfo.subresourceRange.layerCount = 1;
-				for (u32 i = 0; i < context.swapchainImageCount; i++)
+				for (u32 i = 0; i < context->swapchainImageCount; i++)
 				{
-					imageViewInfo.image = context.swapchainImages[i];
-					VkSuccessOrReturnFalse(vkCreateImageView(context.device, &imageViewInfo, 0, &context.swapchainImageViews[i]));
+					imageViewInfo.image = context->swapchainImages[i];
+					VkSuccessOrReturnFalse(vkCreateImageView(context->device, &imageViewInfo, 0, &context->swapchainImageViews[i]));
 				}
 			}
 
@@ -818,7 +818,7 @@ namespace HY3D
 			if (result)
 				result = CreateFramebuffers();
 
-			context.canRender = result;
+			context->canRender = result;
 
 			LOG_INFO(__FUNCTION__);
 
@@ -829,13 +829,13 @@ namespace HY3D
 		{
 			VkCommandPoolCreateInfo cmdBufferPoolInfo = {};
 			cmdBufferPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-			cmdBufferPoolInfo.queueFamilyIndex = context.presentQueueFamilyIndex;
+			cmdBufferPoolInfo.queueFamilyIndex = context->presentQueueFamilyIndex;
 			cmdBufferPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT | VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
-			VkSuccessOrReturnFalse(vkCreateCommandPool(context.device, &cmdBufferPoolInfo, 0, &context.cmdBufferPool));
+			VkSuccessOrReturnFalse(vkCreateCommandPool(context->device, &cmdBufferPoolInfo, 0, &context->cmdBufferPool));
 
 			VkCommandBufferAllocateInfo cmdBufferAllocInfo = {};
 			cmdBufferAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-			cmdBufferAllocInfo.commandPool = context.cmdBufferPool;
+			cmdBufferAllocInfo.commandPool = context->cmdBufferPool;
 			cmdBufferAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 			cmdBufferAllocInfo.commandBufferCount = 1;
 
@@ -848,16 +848,25 @@ namespace HY3D
 
 			for (u32 i = 0; i < NUM_RESOURCES; i++)
 			{
-				VkSuccessOrReturnFalse(vkAllocateCommandBuffers(context.device, &cmdBufferAllocInfo, &context.cmdResources[i].cmdBuffer));
-				VkSuccessOrReturnFalse(vkCreateSemaphore(context.device, &semaphoreInfo, 0, &context.cmdResources[i].imgAvailableSem));
-				VkSuccessOrReturnFalse(vkCreateSemaphore(context.device, &semaphoreInfo, 0, &context.cmdResources[i].frameReadySem));
-				VkSuccessOrReturnFalse(vkCreateFence(context.device, &fenceInfo, 0, &context.cmdResources[i].fence));
+				VkSuccessOrReturnFalse(vkAllocateCommandBuffers(context->device, &cmdBufferAllocInfo, &context->cmdResources[i].cmdBuffer));
+				VkSuccessOrReturnFalse(vkCreateSemaphore(context->device, &semaphoreInfo, 0, &context->cmdResources[i].imgAvailableSem));
+				VkSuccessOrReturnFalse(vkCreateSemaphore(context->device, &semaphoreInfo, 0, &context->cmdResources[i].frameReadySem));
+				VkSuccessOrReturnFalse(vkCreateFence(context->device, &fenceInfo, 0, &context->cmdResources[i].fence));
 			}
 
 			LOG_INFO(__FUNCTION__);
 			return true;
 		}
 
-	} // namespace Vulkan
+		static_func cmd_resources *GetNextAvailableCommandResource()
+		{
+			cmd_resources* result = &context->cmdResources[context->currentCmdResource];
+			context->currentCmdResource = (context->currentCmdResource + 1) % NUM_RESOURCES;
 
+			VkSuccessOrReturnFalse(vkWaitForFences(context->device, 1, &result->fence, true, UINT64_MAX));
+			VkSuccessOrReturnFalse(vkResetFences(context->device, 1, &result->fence));
+
+			return result;
+		}
+	} // namespace Vulkan
 } // namespace HY3D

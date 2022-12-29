@@ -37,6 +37,9 @@ namespace HY3D
 		case RENDERER_API_DIRECTX: break;
 		}
 
+		pfnRendererSetApiContext RendererSetApiContext = 0;
+		pfnRendererOnReload RendererOnReload = 0;
+
 		if (loadedDLL)
 		{
 			renderer->Initialize =
@@ -47,6 +50,12 @@ namespace HY3D
 
 			renderer->Terminate =
 				(pfnRendererTerminate)PlatformGetLibraryFunction(&renderer->library, "RendererTerminate");
+
+			RendererSetApiContext =
+				(pfnRendererSetApiContext)PlatformGetLibraryFunction(&renderer->library, "RendererSetApiContext");
+
+			RendererOnReload =
+				(pfnRendererOnReload)PlatformGetLibraryFunction(&renderer->library, "RendererOnReload");
 		}
 
 		if (!renderer->Initialize)
@@ -55,5 +64,11 @@ namespace HY3D
 			renderer->DrawFrame = RendererDrawFrameStub;
 		if (!renderer->Terminate)
 			renderer->Terminate = RendererTerminateStub;
+				
+		if (RendererSetApiContext)
+			RendererSetApiContext(&renderer->apiContext);
+
+		if (RendererOnReload)
+			RendererOnReload();
 	}
 } // namespace HY3D

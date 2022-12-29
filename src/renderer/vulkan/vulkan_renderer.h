@@ -28,7 +28,7 @@ namespace HY3D
 			VkFence fence;
 		};
 
-		global_var struct {
+		global_var struct vulkan_context{
 			dynamic_library library;
 
 			VkInstance instance;
@@ -61,12 +61,13 @@ namespace HY3D
 
 			VkCommandPool cmdBufferPool;
 			cmd_resources cmdResources[NUM_RESOURCES];
+			u32 currentCmdResource = 0;
 			
+			bool isInitialized = false;
 #if _DEBUG
 			VkDebugUtilsMessengerEXT debugMessenger;
 #endif
-		} context;
-
+		} *context;
 	} // namespace Vulkan
 
 } // namespace HY3D
