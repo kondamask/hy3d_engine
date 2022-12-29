@@ -177,14 +177,16 @@ namespace HY3D
 			ASSERT(gpuCount > 0 && gpuCount <= ArrayCount(gpuBuffer));
 			VkSuccessOrReturnFalse(vkEnumeratePhysicalDevices(context.instance, &gpuCount, gpuBuffer));
 
-			i32 bestGPUScore = -1;
 			i32 bestGPU = -1;
+			i32 bestGPUScore = -1;
+			VkPhysicalDeviceProperties bestGPUProperties = {};
+			VkPhysicalDeviceMemoryProperties bestGPUMemoryProperties = {};
 
 			LOG_INFO("Available GPUs:");
-			VkPhysicalDeviceProperties gpuProperties = {};
-			VkPhysicalDeviceMemoryProperties gpuMemoryProperties = {};
 			for (u32 iGPU = 0; iGPU < gpuCount; iGPU++)
 			{
+				VkPhysicalDeviceProperties gpuProperties = {};
+				VkPhysicalDeviceMemoryProperties gpuMemoryProperties = {};
 				vkGetPhysicalDeviceProperties(gpuBuffer[iGPU], &gpuProperties);
 				vkGetPhysicalDeviceMemoryProperties(gpuBuffer[iGPU], &gpuMemoryProperties);
 
@@ -210,14 +212,16 @@ namespace HY3D
 
 				if (curGPUScore > bestGPUScore)
 				{
-					bestGPUScore = curGPUScore;
 					bestGPU = iGPU;
+					bestGPUScore = curGPUScore;
+					bestGPUProperties = gpuProperties;
+					bestGPUMemoryProperties = gpuMemoryProperties;
 				}
 			}
 
 			context.gpu = gpuBuffer[bestGPU];
-			context.gpuProperties = gpuProperties;
-			context.gpuMemoryProperties = gpuMemoryProperties;
+			context.gpuProperties = bestGPUProperties;
+			context.gpuMemoryProperties = bestGPUMemoryProperties;
 
 			LOG_INFO("GPU Selected: %s", context.gpuProperties.deviceName);
 
@@ -272,9 +276,6 @@ namespace HY3D
 
 		static_func bool PickCommandQueues()
 		{
-			// TODO: Pick transfer queue from seperate family from that of graphics queue.
-			bool result = true;
-
 			context.graphicsQueueFamilyIndex = UINT32_MAX;
 			context.presentQueueFamilyIndex = UINT32_MAX;
 			context.transferQueueFamilyIndex = UINT32_MAX;
@@ -289,10 +290,27 @@ namespace HY3D
 				for (u32 i = 0; i < queueFamilyCount; i++)
 					VkSuccessOrReturnFalse(vkGetPhysicalDeviceSurfaceSupportKHR(context.gpu, i, context.surface, &supportsPresent[i]));
 
+#if _DEBUG
+				LOG_DEBUG("Available Queue Families:");
 				for (u32 i = 0; i < queueFamilyCount; ++i)
 				{
-					// NOTE(heyyod): Find a graphics queue
-					if ((availableQueueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0)
+					LOG_DEBUG("    Family %d:", i);
+					if (availableQueueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
+						LOG_DEBUG("      %d GRAPHICS Queues", availableQueueFamilies[i].queueCount);
+					if (availableQueueFamilies[i].queueFlags & VK_QUEUE_COMPUTE_BIT)
+						LOG_DEBUG("      %d COMPUTE Queues", availableQueueFamilies[i].queueCount);
+					if (availableQueueFamilies[i].queueFlags & VK_QUEUE_TRANSFER_BIT)
+						LOG_DEBUG("      %d TRANSFER Queues", availableQueueFamilies[i].queueCount);
+					if (availableQueueFamilies[i].queueFlags & VK_QUEUE_SPARSE_BINDING_BIT)
+						LOG_DEBUG("      %d SPARSE_BINDING Queues", availableQueueFamilies[i].queueCount);
+					if (availableQueueFamilies[i].queueFlags & VK_QUEUE_PROTECTED_BIT)
+						LOG_DEBUG("      %d PROTECTED Queues", availableQueueFamilies[i].queueCount);						
+				}
+#endif
+				// Pick Graphics and Present Queue Family
+				for (u32 i = 0; i < queueFamilyCount; ++i)
+				{
+					if (availableQueueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
 					{
 						if (context.graphicsQueueFamilyIndex == UINT32_MAX)
 							context.graphicsQueueFamilyIndex = i;
@@ -304,39 +322,48 @@ namespace HY3D
 						}
 					}
 				}
+
+				ASSERT(context.graphicsQueueFamilyIndex != UINT32_MAX);
+				ASSERT(context.graphicsQueueFamilyIndex == context.presentQueueFamilyIndex);
+				LOG_INFO("Graphics Queue Family Selected: %d", context.graphicsQueueFamilyIndex);
+				LOG_INFO("Present Queue Family Selected: %d", context.presentQueueFamilyIndex);
+
+				// if (context.presentQueueFamilyIndex == UINT32_MAX) // didn't find a queue that supports both graphics and present
+				// {
+				// 	for (u32 i = 0; i < queueFamilyCount; ++i)
+				// 		if (supportsPresent[i] == VK_TRUE)
+				// 		{
+				// 			context.presentQueueFamilyIndex = i;
+				// 			break;
+				// 		}
+				// }
+
+				// Pick Transfer Queue
 				for (u32 i = 0; i < queueFamilyCount; ++i)
 				{
-					// NOTE(heyyod): Find a transfer queue
-					if ((availableQueueFamilies[i].queueFlags & VK_QUEUE_TRANSFER_BIT) != 0)
+					if (availableQueueFamilies[i].queueFlags & VK_QUEUE_TRANSFER_BIT)
 					{
 						if (context.transferQueueFamilyIndex == UINT32_MAX)
 							context.transferQueueFamilyIndex = i;
 					}
-				}
-				if (context.presentQueueFamilyIndex == UINT32_MAX) // didn't find a queue that supports both graphics and present
-				{
-					for (u32 i = 0; i < queueFamilyCount; ++i)
-						if (supportsPresent[i] == VK_TRUE)
-						{
-							context.presentQueueFamilyIndex = i;
-							break;
-						}
+					
+					if ((availableQueueFamilies[i].queueFlags & VK_QUEUE_TRANSFER_BIT) && 
+						!(availableQueueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) &&
+						context.graphicsQueueFamilyIndex != i)
+					{
+						context.transferQueueFamilyIndex = i;
+						break;
+					}
 				}
 
-				ASSERT(context.graphicsQueueFamilyIndex != UINT32_MAX);
-				if (context.graphicsQueueFamilyIndex == UINT32_MAX)
-					result = false;
-
-				ASSERT(!(result && context.presentQueueFamilyIndex == UINT32_MAX));
-				if (result && context.presentQueueFamilyIndex == UINT32_MAX)
-					result = false;
+				ASSERT(context.transferQueueFamilyIndex != UINT32_MAX);
+				LOG_INFO("Transfer Queue Family Selected: %d", context.transferQueueFamilyIndex);
 			}
 
-			// TODO: make this work for seperate queues if needed
-			ASSERT(!(result && context.graphicsQueueFamilyIndex != context.presentQueueFamilyIndex));
-			if (result && context.graphicsQueueFamilyIndex != context.presentQueueFamilyIndex)
+			if (context.graphicsQueueFamilyIndex == UINT32_MAX ||
+				context.presentQueueFamilyIndex == UINT32_MAX ||
+				context.transferQueueFamilyIndex == UINT32_MAX)
 				return false;
-
 
 			// TODO: Need to do some stuff if they are different like:
 			// VkDeviceQueueCreateInfo queueInfo[2] = {};
@@ -351,7 +378,10 @@ namespace HY3D
 			// queueInfo[1].queueFamilyIndex = presentQueueFamilyIndex;
 			// queueInfo[1].queueCount = 1;
 			// queueInfo[1].pQueuePriorities = &queuePriority;
-			return result;
+
+			LOG_INFO(__FUNCTION__);
+
+			return true;
 		}
 
 		static_func bool CreateDevice()

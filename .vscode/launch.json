@@ -2,30 +2,36 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch Debug",
+            "name": "Run - Debug",
             "type": "cppvsdbg",
             "request": "launch",
-            "windows": {
-                "program": "${workspaceFolder}/bin/Debug/hy3d_engine.exe",
-            },
-            "args": [],
-            "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
-            "environment": [],
-            "console": "integratedTerminal"
+            "console": "newExternalWindow",
+            "program": "${workspaceFolder}/bin/Debug/hy3d_engine.exe",
+            "requireExactSource": true,
+            "windows": {
+                "name": "Run - Debug",
+                "type": "cppvsdbg",
+                "request": "launch",
+                "cwd": "${workspaceRoot}",
+                "program": "${workspaceFolder}/bin/Debug/hy3d_engine.exe",
+            }
         },
         {
-            "name": "Launch Release",
+            "name": "Run - Release",
             "type": "cppvsdbg",
             "request": "launch",
-            "windows": {
-                "program": "${workspaceFolder}/bin/Release/hy3d_engine.exe",
-            },
-            "args": [],
             "cwd": "${workspaceFolder}",
-            "environment": [],
-            "console": "integratedTerminal",
-            "preLaunchTask": "Build All - Release Mode"
+            "console": "newExternalWindow",
+            "program": "${workspaceFolder}/bin/Release/hy3d_engine.exe",
+            "preLaunchTask": "Build All - Release Mode",
+            "windows": {
+                "name": "Run - Release",
+                "type": "cppvsdbg",
+                "request": "launch",
+                "cwd": "${workspaceRoot}",
+                "program": "${workspaceFolder}/bin/Release/hy3d_engine.exe",
+            }
         }
     ]
 }
