@@ -423,7 +423,7 @@ namespace HY3D
 				ASSERT(found);
 			}
 
-			// TODO(heyyod): Check if these features are supported;
+			// TODOcontext.: Check if these features are supported;
 			VkPhysicalDeviceFeatures desiredFeatures = {};
 			desiredFeatures.samplerAnisotropy = VK_TRUE;
 			desiredFeatures.fillModeNonSolid = VK_TRUE;
@@ -459,7 +459,7 @@ namespace HY3D
 			return true;
 		}
 
-		static_func bool ClearSwapchainImages()
+		static_func bool DestroySwapchainImages()
 		{
 			VkGoodHandleOrReturnFalse(context.device);
 			vkDeviceWaitIdle(context.device);
@@ -468,6 +468,176 @@ namespace HY3D
 				if (VkGoodHandle(context.swapchainImageViews[i]))
 					vkDestroyImageView(context.device, context.swapchainImageViews[i], 0);
 			}
+			return true;
+		}
+
+		static_func void DestroyRenderPass()
+		{
+			if (VkGoodHandle(context.device))
+			{
+				vkDeviceWaitIdle(context.device);
+				if (VkGoodHandle(context.renderPass))
+					vkDestroyRenderPass(context.device, context.renderPass, 0);
+			}
+		}
+
+		static_func bool CreateRenderPass()
+		{
+			DestroyRenderPass();
+
+			VkAttachmentDescription colorAttachment = {};
+			colorAttachment.flags = 0;
+			colorAttachment.format = context.surfaceFormat.format;
+			colorAttachment.samples = context.msaaSamples;
+			colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+			colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+			colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+			colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+			colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+			VkAttachmentReference colorAttachementRef = {};
+			colorAttachementRef.attachment = 0;
+			colorAttachementRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+			// VkAttachmentDescription depthAttachment = {};
+			// // depthAttachment.format = DEPTH_BUFFER_FORMAT;
+			// depthAttachment.samples = context.msaaSamples;
+			// depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+			// depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+			// depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+			// depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+			// depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+			// depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+			// VkAttachmentReference depthAttachmentRef = {};
+			// depthAttachmentRef.attachment = 1;
+			// depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+			// NOTEcontext.: Specify the subpasses
+			VkSubpassDescription subpass = {};
+			subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+
+			// NOTEcontext.: The index of the color attachment in this array is directly
+			// referenced from the fragment shader with the layout(location = 0) out vec4 outColor directive!
+			subpass.colorAttachmentCount = 1; // ArrayCount(colorAttachementRef)
+			subpass.pColorAttachments = &colorAttachementRef;
+			// subpass.pDepthStencilAttachment = &depthAttachmentRef;
+
+			// subpass.inputAttachmentCount = 0;
+			// subpass.pInputAttachments = 0;
+			// subpass.preserveAttachmentCount = 0;
+			// subpass.pPreserveAttachments = 0;
+
+			VkSubpassDependency dependency = {};
+			dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+			dependency.dstSubpass = 0;
+			dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+			dependency.srcAccessMask = 0;
+			dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+			dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+			VkRenderPassCreateInfo renderPassInfo = {};
+			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+			renderPassInfo.subpassCount = 1;
+			renderPassInfo.pSubpasses = &subpass;
+			renderPassInfo.dependencyCount = 1;
+			renderPassInfo.pDependencies = &dependency;
+
+			if (context.msaaSamples == VK_SAMPLE_COUNT_1_BIT)
+			{
+				colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+				VkAttachmentDescription attachments[] = { 
+					colorAttachment,
+					// depthAttachment
+				};
+				renderPassInfo.attachmentCount = ArrayCount(attachments);
+				renderPassInfo.pAttachments = attachments;
+				VkSuccessOrReturnFalse(vkCreateRenderPass(context.device, &renderPassInfo, 0, &context.renderPass));
+			}
+			else
+			{
+				colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+				// NOTEcontext.: attachment to resolve the multisamplerd image into a presentable image
+				VkAttachmentDescription colorAttachmentResolve = {};
+				colorAttachmentResolve.format = context.surfaceFormat.format;
+				colorAttachmentResolve.samples = VK_SAMPLE_COUNT_1_BIT;
+				colorAttachmentResolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+				colorAttachmentResolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+				colorAttachmentResolve.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+				colorAttachmentResolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+				colorAttachmentResolve.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+				colorAttachmentResolve.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+				VkAttachmentReference colorAttachmentResolveRef = {};
+				colorAttachmentResolveRef.attachment = 2;
+				colorAttachmentResolveRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+				subpass.pResolveAttachments = &colorAttachmentResolveRef;
+
+				VkAttachmentDescription attachments[] = {
+					colorAttachment,
+					// depthAttachment,
+					colorAttachmentResolve
+				};
+				renderPassInfo.attachmentCount = ArrayCount(attachments);
+				renderPassInfo.pAttachments = attachments;
+				VkSuccessOrReturnFalse(vkCreateRenderPass(context.device, &renderPassInfo, 0, &context.renderPass));
+			}
+
+			LOG_INFO(__FUNCTION__);
+			return true;
+		}
+
+		static_func void DestroyFramebuffers()
+		{
+			if (VkGoodHandle(context.device))
+			{
+				vkDeviceWaitIdle(context.device);
+				for (u32 i = 0; i < NUM_SWAPCHAIN_IMAGES; i++)
+				{
+					if (VkGoodHandle(context.framebuffers[i]))
+					{
+						vkDestroyFramebuffer(context.device, context.framebuffers[i], 0);
+						// context.framebuffers[i] = VK_NULL_HANDLE;
+					}
+				}
+			}
+		}
+
+		static_func bool CreateFramebuffers()
+		{
+			DestroyFramebuffers();
+
+			local_var VkFramebufferCreateInfo framebufferInfo = {};
+			framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+			framebufferInfo.renderPass = context.renderPass;
+			framebufferInfo.width = context.windowExtent.width;
+			framebufferInfo.height = context.windowExtent.height;
+			framebufferInfo.layers = 1;
+			for (u32 i = 0; i < NUM_SWAPCHAIN_IMAGES; i++)
+			{
+				if (context.msaaSamples == VK_SAMPLE_COUNT_1_BIT)
+				{
+					VkImageView attachments[] = { 
+						context.swapchainImageViews[i],
+						// context.depthBuffer.view
+					};
+					framebufferInfo.pAttachments = attachments;
+					framebufferInfo.attachmentCount = ArrayCount(attachments);
+					VkSuccessOrReturnFalse(vkCreateFramebuffer(context.device, &framebufferInfo, 0, &context.framebuffers[i]));
+				}
+				else
+				{
+					VkImageView attachments[] = {
+						// context.msaa.view,
+						// context.depthBuffer.view,
+						context.swapchainImageViews[i]
+					};
+					framebufferInfo.pAttachments = attachments;
+					framebufferInfo.attachmentCount = ArrayCount(attachments);
+					VkSuccessOrReturnFalse(vkCreateFramebuffer(context.device, &framebufferInfo, 0, &context.framebuffers[i]));
+				}
+			}
+
+			LOG_INFO(__FUNCTION__);
 			return true;
 		}
 
@@ -610,7 +780,7 @@ namespace HY3D
 
 			// NOTE: Create the Image views
 			{
-				if (!ClearSwapchainImages())
+				if (!DestroySwapchainImages())
 				{
 					LOG_ERROR("Failed to clear swapchain images.");
 					return false;
@@ -645,13 +815,46 @@ namespace HY3D
 			// if (result)
 			// 	result = VulkanCreateMSAABuffer();
 
-			// if (result)
-			// 	result = VulkanCreateFrameBuffers();
+			if (result)
+				result = CreateFramebuffers();
 
 			context.canRender = result;
 
 			LOG_INFO(__FUNCTION__);
 
+			return true;
+		}
+
+		inline static_func bool CreateCommandResources()
+		{
+			VkCommandPoolCreateInfo cmdBufferPoolInfo = {};
+			cmdBufferPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+			cmdBufferPoolInfo.queueFamilyIndex = context.presentQueueFamilyIndex;
+			cmdBufferPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT | VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
+			VkSuccessOrReturnFalse(vkCreateCommandPool(context.device, &cmdBufferPoolInfo, 0, &context.cmdBufferPool));
+
+			VkCommandBufferAllocateInfo cmdBufferAllocInfo = {};
+			cmdBufferAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+			cmdBufferAllocInfo.commandPool = context.cmdBufferPool;
+			cmdBufferAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+			cmdBufferAllocInfo.commandBufferCount = 1;
+
+			VkSemaphoreCreateInfo semaphoreInfo = {};
+			semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+			VkFenceCreateInfo fenceInfo = {};
+			fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+			fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+			for (u32 i = 0; i < NUM_RESOURCES; i++)
+			{
+				VkSuccessOrReturnFalse(vkAllocateCommandBuffers(context.device, &cmdBufferAllocInfo, &context.cmdResources[i].cmdBuffer));
+				VkSuccessOrReturnFalse(vkCreateSemaphore(context.device, &semaphoreInfo, 0, &context.cmdResources[i].imgAvailableSem));
+				VkSuccessOrReturnFalse(vkCreateSemaphore(context.device, &semaphoreInfo, 0, &context.cmdResources[i].frameReadySem));
+				VkSuccessOrReturnFalse(vkCreateFence(context.device, &fenceInfo, 0, &context.cmdResources[i].fence));
+			}
+
+			LOG_INFO(__FUNCTION__);
 			return true;
 		}
 

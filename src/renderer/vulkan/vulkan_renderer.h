@@ -13,12 +13,21 @@
 
 #define VULKAN_DLL "vulkan-1.dll"
 
+#define NUM_RESOURCES 4 // TODO: Make this editable on runtime
 #define NUM_SWAPCHAIN_IMAGES 2 // TODO: Make this editable on runtime
 
 namespace HY3D
 {
 	namespace Vulkan
 	{
+		struct cmd_resources
+		{
+			VkCommandBuffer cmdBuffer;
+			VkSemaphore imgAvailableSem;
+			VkSemaphore frameReadySem;
+			VkFence fence;
+		};
+
 		global_var struct {
 			dynamic_library library;
 
@@ -32,7 +41,7 @@ namespace HY3D
 			VkSurfaceKHR surface;
 			VkSurfaceFormatKHR surfaceFormat;
 
-			VkSampleCountFlagBits msaaSamples;
+			VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT; // TODO: 
 
 			VkQueue graphicsQueue;
 			VkQueue presentQueue;
@@ -49,6 +58,9 @@ namespace HY3D
 			VkImageView swapchainImageViews[NUM_SWAPCHAIN_IMAGES];
 			VkFramebuffer framebuffers[NUM_SWAPCHAIN_IMAGES];
 			u32 swapchainImageCount;
+
+			VkCommandPool cmdBufferPool;
+			cmd_resources cmdResources[NUM_RESOURCES];
 			
 #if _DEBUG
 			VkDebugUtilsMessengerEXT debugMessenger;

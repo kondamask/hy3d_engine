@@ -37,6 +37,12 @@ namespace HY3D
 			result = CreateDevice();
 			ASSERT(result == true);
 
+			result = CreateCommandResources();
+			ASSERT(result == true);
+
+			result = CreateRenderPass();
+			ASSERT(result == true);
+
 			result = CreateSwapchain();
 			ASSERT(result == true);
 
@@ -45,14 +51,13 @@ namespace HY3D
 		}
 
 		extern "C" HY3D_API RendererDrawFrameSignature(RendererDrawFrame)
-		{				
+		{
+
 			return;
 		}
 
 		extern "C" HY3D_API RendererTerminateSignature(RendererTerminate)
 		{
-			// vkDestroyInstance(context.instance, 0);
-
 			PlatformUnloadLibrary(&context.library);
 			LOG_INFO(__FUNCTION__);
 		}
