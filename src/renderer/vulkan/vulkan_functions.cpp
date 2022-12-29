@@ -32,6 +32,8 @@ namespace HY3D
 			VulkanLoadGlobalFunc(vkCreateInstance);
 			VulkanLoadGlobalFunc(vkEnumerateInstanceLayerProperties);
 			VulkanLoadGlobalFunc(vkEnumerateInstanceExtensionProperties);
+			
+			LOG_DEBUG(__FUNCTION__);
 			return true;
 		}
 
@@ -91,6 +93,7 @@ namespace HY3D
 			VulkanLoadInstanceFunc(vkCreateDevice);
 			VulkanLoadInstanceFunc(vkGetDeviceProcAddr);
 
+			LOG_DEBUG(__FUNCTION__);
 			return true;
 		}
 
@@ -251,6 +254,7 @@ namespace HY3D
 			VulkanLoadDeviceFunc(vkCmdPushConstants);
 			VulkanLoadDeviceFunc(vkCmdBlitImage);
 
+			LOG_DEBUG(__FUNCTION__);
 			return true;
 		}
 	} // namespace Vulkan

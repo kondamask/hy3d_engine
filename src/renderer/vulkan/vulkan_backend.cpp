@@ -48,41 +48,39 @@ namespace HY3D
 			appInfo.engineVersion = VK_API_VERSION_1_0;
 			appInfo.apiVersion = VK_API_VERSION_1_2;
 
+			// TODO:  Fix this once there are instance layers needed for release
 #if _DEBUG
 			char* instanceLayers[] = {
-				"VK_LAYER_KHRONOS_validation" };
-#else
-			char** instanceLayers = 0;
-#endif
+				"VK_LAYER_KHRONOS_validation"
+			};
 
-			if (instanceLayers)
+			u32 layerCount;
+			VkSuccessOrReturnFalse(vkEnumerateInstanceLayerProperties(&layerCount, 0));
+
+			VkLayerProperties availableLayers[32];
+			ASSERT(layerCount <= ArrayCount(availableLayers));
+
+			VkSuccessOrReturnFalse(vkEnumerateInstanceLayerProperties(&layerCount, availableLayers));
+
+			LOG_DEBUG("Required Instance Layers:");
+
+			for (char* desiredInstanceLayer : instanceLayers)
 			{
-				u32 layerCount;
-				VkSuccessOrReturnFalse(vkEnumerateInstanceLayerProperties(&layerCount, 0));
-
-				VkLayerProperties availableLayers[32];
-				ASSERT(layerCount <= ArrayCount(availableLayers));
-
-				VkSuccessOrReturnFalse(vkEnumerateInstanceLayerProperties(&layerCount, availableLayers));
-
-				LOG_DEBUG("Required Instance Layers:");
-				for (char *desiredInstanceLayer : instanceLayers)
+				LOG_DEBUG("    %s", desiredInstanceLayer);
+				bool found = false;
+				for (VkLayerProperties& layerProperties : availableLayers)
 				{
-					LOG_DEBUG("    %s", desiredInstanceLayer);
-					bool found = false;
-					for (VkLayerProperties& layerProperties : availableLayers)
+					if (strcmp(desiredInstanceLayer, layerProperties.layerName) == 0)
 					{
-						if (strcmp(desiredInstanceLayer, layerProperties.layerName) == 0)
-						{
-							found = true;
-							break;
-						}
+						found = true;
+						break;
 					}
-					if (!found)
-						LOG_ERROR("    %s - NOT SUPPORTED", desiredInstanceLayer);
-					ASSERT(found);
 				}
+				if (!found)
+					LOG_ERROR("    %s - NOT SUPPORTED", desiredInstanceLayer);
+				ASSERT(found);
 			}
+#endif
 
 			char* extensions[] = {
 		#if _DEBUG
@@ -131,11 +129,12 @@ namespace HY3D
 			instanceInfo.pApplicationInfo = &appInfo;
 			instanceInfo.enabledExtensionCount = ArrayCount(extensions);
 			instanceInfo.ppEnabledExtensionNames = extensions;
-			if (instanceLayers)
-			{
-				instanceInfo.enabledLayerCount = ArrayCount(instanceLayers);
-				instanceInfo.ppEnabledLayerNames = instanceLayers;
-			}
+
+			// TODO:  Fix this once instance layers exist in release
+#if _DEBUG
+			instanceInfo.enabledLayerCount = ArrayCount(instanceLayers);
+			instanceInfo.ppEnabledLayerNames = instanceLayers;
+#endif
 
 			VkSuccessOrReturnFalse(vkCreateInstance(&instanceInfo, 0, &context.instance));
 

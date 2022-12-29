@@ -60,16 +60,12 @@ namespace HY3D
 } // namespace HY3D
 
 
-#if _DEBUG
 #define VkSuccess(call) (call == VK_SUCCESS)
 #define VkSuccessOrReturnFalse(call) \
-	if (!VkSuccess(call)) return false;
+	if (!VkSuccess(call)) return false
 
 #define VkGoodHandle(handle) (handle != VK_NULL_HANDLE)
 #define VkGoodHandleOrReturnFalse(handle) \
-	if (!VkGoodHandle(handle)) return false;
-#else
-#define VkSuccess(call) call
-#endif
-
+	if (!VkGoodHandle(handle)) return false
+	
 #endif // INCLUDE_VULKAN_RENDERER_H
