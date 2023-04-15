@@ -18,7 +18,6 @@ namespace HY3D
 		RENDERER_API_DIRECTX,
 	};
 
-
 	struct render_packet
 	{
 		f64 dt;
@@ -40,6 +39,10 @@ namespace HY3D
 	typedef RendererDrawFrameSignature(_RendererDrawFrame);
 #define pfnRendererDrawFrame _RendererDrawFrame*
 
+#define RendererReloadShadersSignature(name) void name()
+	typedef RendererReloadShadersSignature(_RendererReloadShaders);
+#define pfnRendererReloadShaders _RendererReloadShaders*
+
 #define RendererTerminateSignature(name) void name()
 	typedef RendererTerminateSignature(_RendererTerminate);
 #define pfnRendererTerminate _RendererTerminate*
@@ -47,9 +50,11 @@ namespace HY3D
 	struct renderer
 	{
 		dynamic_library library;
+		file_write_time shadersWriteTime;
 
 		pfnRendererInitialize Initialize;
 		pfnRendererDrawFrame DrawFrame;
+		pfnRendererReloadShaders ReloadShaders;
 		pfnRendererTerminate Terminate;
 
 		void* apiContext;

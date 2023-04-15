@@ -872,7 +872,18 @@ namespace HY3D
 
 		static_func void DestroyPipeline()
 		{
+			vkDeviceWaitIdle(context->device);
 			
+			if (VkGoodHandle(context->pipeline))
+			{
+				vkDestroyPipeline(context->device, context->pipeline, 0);
+				context->pipeline = 0;
+			}
+			if (VkGoodHandle(context->pipelineLayout))
+			{
+				vkDestroyPipelineLayout(context->device, context->pipelineLayout, 0);
+				context->pipelineLayout = 0;
+			}
 		}
 
 		static_func bool CreateGraphicsPipeline()
@@ -960,9 +971,8 @@ namespace HY3D
 			graphicsPipelineInfo.pDynamicState = &dynamicStatesInfo;
 
 			VkPipelineLayoutCreateInfo pipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-			VkPipelineLayout pipelineLayout;
-			VkSuccessOrReturnFalse(vkCreatePipelineLayout(context->device, &pipelineLayoutInfo, 0, &pipelineLayout));
-			graphicsPipelineInfo.layout = pipelineLayout;
+			VkSuccessOrReturnFalse(vkCreatePipelineLayout(context->device, &pipelineLayoutInfo, 0, &context->pipelineLayout));
+			graphicsPipelineInfo.layout = context->pipelineLayout;
 
 			graphicsPipelineInfo.renderPass = context->renderPass;
 

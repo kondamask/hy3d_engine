@@ -63,6 +63,7 @@ namespace HY3D
 			cmd_resources cmdResources[NUM_RESOURCES];
 			u32 currentCmdResource = 0;
 
+			VkPipelineLayout pipelineLayout;
 			VkPipeline pipeline;
 			
 			bool isInitialized = false;

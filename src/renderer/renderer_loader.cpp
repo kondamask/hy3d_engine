@@ -15,6 +15,11 @@ namespace HY3D
 		LOG_DEBUG("Called Stub Function '%s'", __FUNCTION__);
 	}
 
+	RendererReloadShadersSignature(RendererReloadShadersStub)
+	{
+		LOG_DEBUG("Called Stub Function '%s'", __FUNCTION__);
+	}
+
 	RendererTerminateSignature(RendererTerminateStub)
 	{
 		LOG_DEBUG("Called Stub Function '%s'", __FUNCTION__);
@@ -48,6 +53,9 @@ namespace HY3D
 			renderer->DrawFrame =
 				(pfnRendererDrawFrame)PlatformGetLibraryFunction(&renderer->library, "RendererDrawFrame");
 
+			renderer->ReloadShaders =
+				(pfnRendererReloadShaders)PlatformGetLibraryFunction(&renderer->library, "RendererReloadShaders");
+
 			renderer->Terminate =
 				(pfnRendererTerminate)PlatformGetLibraryFunction(&renderer->library, "RendererTerminate");
 
@@ -62,6 +70,8 @@ namespace HY3D
 			renderer->Initialize = RendererInitializeStub;
 		if (!renderer->DrawFrame)
 			renderer->DrawFrame = RendererDrawFrameStub;
+		if (!renderer->ReloadShaders)
+			renderer->ReloadShaders = RendererReloadShadersStub;
 		if (!renderer->Terminate)
 			renderer->Terminate = RendererTerminateStub;
 				

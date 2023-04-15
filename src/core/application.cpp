@@ -22,6 +22,12 @@ namespace HY3D
 
 		Application::state.engine.Initialize();
 		Application::state.renderer.Initialize(&Application::state.platformState);
+		
+		if (!PlatformGetFileWriteTime("bin\\shaders\\triangle.vert.spv", &Application::state.renderer.shadersWriteTime))
+		{
+			LOG_ERROR("Could not find compiled shaders.");
+			return false;
+		}
 
 		return true;
 	}
@@ -34,17 +40,24 @@ namespace HY3D
 
 		while (PlatformProcessMessages(&Application::state.platformState))
 		{
+#if _DEBUG
 			if (PlatformUpdatedDynamicLibrary(&Application::state.engine.library))
 				EngineLoadCode(&Application::state.engine);
 				
 			if (PlatformUpdatedDynamicLibrary(&Application::state.renderer.library))
 				RendererLoadCode(&Application::state.renderer, RENDERER_API_VULKAN);
+#endif
 
 			if (!Application::state.isSuspended)
 			{
 				Application::state.engine.Update(frameDt);
-				Application::state.engine.Render(frameDt);
+				// Application::state.engine.Render(frameDt);
 
+#if _DEBUG
+				if (PlatformWasFileUpdated("bin\\shaders\\triangle.vert.spv", &Application::state.renderer.shadersWriteTime))
+					Application::state.renderer.ReloadShaders();
+#endif
+				
 				render_packet packet;
 				packet.dt = frameDt;
 				Application::state.renderer.DrawFrame(&packet);
