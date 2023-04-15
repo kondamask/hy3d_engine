@@ -20,6 +20,13 @@ namespace HY3D
 {
 	namespace Vulkan
 	{
+		enum VULKAN_FLAGS
+		{
+			INVALID_FLAG = 0,
+			INITIALIZED  = 1,
+			CANRENDER    = 2,
+		};
+
 		struct cmd_resources
 		{
 			VkCommandBuffer cmdBuffer;
@@ -50,7 +57,6 @@ namespace HY3D
 			u32 presentQueueFamilyIndex;
 			u32 transferQueueFamilyIndex;
 
-			bool canRender;
 			VkExtent2D windowExtent;
 			VkSwapchainKHR swapchain;
 			VkRenderPass renderPass;
@@ -66,7 +72,7 @@ namespace HY3D
 			VkPipelineLayout pipelineLayout;
 			VkPipeline pipeline;
 			
-			bool isInitialized = false;
+			unsigned int flags;
 #if _DEBUG
 			VkDebugUtilsMessengerEXT debugMessenger;
 #endif

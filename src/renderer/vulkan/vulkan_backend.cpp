@@ -649,7 +649,7 @@ namespace HY3D
 			VkGoodHandleOrReturnFalse(context->device);
 			vkDeviceWaitIdle(context->device);
 
-			context->canRender = false;
+			BIT_CLEAR(context->flags, VULKAN_FLAGS::CANRENDER);
 
 			// NOTE: Get Surface capabilities
 			{
@@ -678,6 +678,7 @@ namespace HY3D
 				}
 				if ((context->windowExtent.width == 0) || (context->windowExtent.height == 0))
 				{
+					BIT_CLEAR(context->flags, VULKAN_FLAGS::CANRENDER);
 					return true;
 				}
 
@@ -819,7 +820,10 @@ namespace HY3D
 			if (result)
 				result = CreateFramebuffers();
 
-			context->canRender = result;
+			if (result)
+				BIT_SET(context->flags, VULKAN_FLAGS::CANRENDER);
+			else
+				BIT_CLEAR(context->flags, VULKAN_FLAGS::CANRENDER);
 
 			LOG_INFO(__FUNCTION__);
 

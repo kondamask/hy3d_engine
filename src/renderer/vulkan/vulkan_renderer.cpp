@@ -51,12 +51,18 @@ namespace HY3D
 
 			LOG_INFO(__FUNCTION__);
 
-			context->isInitialized = true;
+			BIT_SET(context->flags, VULKAN_FLAGS::INITIALIZED);
 			return true;
 		}
 
 		extern "C" HY3D_API RendererDrawFrameSignature(RendererDrawFrame)
 		{
+			if (!BIT_GET(context->flags, VULKAN_FLAGS::CANRENDER))
+			{
+				CreateSwapchain();
+				return;
+			}
+			
 			cmd_resources* res = GetNextAvailableCommandResource();
 
 			// NOTE: Get the next image that we'll use to create the frame and draw it
@@ -99,10 +105,10 @@ namespace HY3D
 
 			vkCmdBeginRenderPass(res->cmdBuffer, &renderpassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-			VkViewport viewport = {0, (f32)context->windowExtent.height, (f32)context->windowExtent.width, -(f32)context->windowExtent.height};
+			VkViewport viewport = { 0, (f32)context->windowExtent.height, (f32)context->windowExtent.width, -(f32)context->windowExtent.height };
 			vkCmdSetViewport(res->cmdBuffer, 0, 1, &viewport);
 
-			VkRect2D scissor = {{0, 0}, {context->windowExtent.width, context->windowExtent.height}};
+			VkRect2D scissor = { {0, 0}, {context->windowExtent.width, context->windowExtent.height} };
 			vkCmdSetScissor(res->cmdBuffer, 0, 1, &scissor);
 
 			vkCmdBindPipeline(res->cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, context->pipeline);
@@ -181,7 +187,7 @@ namespace HY3D
 
 		extern "C" HY3D_API RendererOnReloadSignature(RendererOnReload)
 		{
-			if (!context->isInitialized)
+			if (!BIT_GET(context->flags, VULKAN_FLAGS::INITIALIZED))
 				return;
 
 			vkGetInstanceProcAddr = (pfn_vkGetInstanceProcAddr)PlatformGetLibraryFunction(&context->library, "vkGetInstanceProcAddr");

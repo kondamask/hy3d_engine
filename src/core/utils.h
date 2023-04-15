@@ -11,6 +11,12 @@ namespace HY3D
 #define TERABYTES(val) (GIGABYTES(val) * 1024ULL)
 
 #define AdvancePointer(ptr, bytes) ptr = (u8 *)ptr + bytes
+
+#define BIT(n)                    ( 1<<(n) )
+#define BIT_GET(bitfield, n)      ( bitfield &   (n) )
+#define BIT_SET(bitfield, mask)   ( bitfield |=  (mask) )
+#define BIT_CLEAR(bitfield, mask) ( bitfield &= ~(mask) )
+#define BIT_FLIP(bitfield, mask)  ( bitfield ^=  (mask) )
 }
 
 #endif // INCLUDE_UTILS_H
