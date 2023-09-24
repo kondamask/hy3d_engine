@@ -1,5 +1,7 @@
 #include "engine.h"
 #include "core/logger.h"
+#include "core/input.h"
+#include "renderer/renderer.h"
 
 namespace HY3D
 {

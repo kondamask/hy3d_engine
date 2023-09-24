@@ -1,36 +1,76 @@
 {
     "tasks": [
         {
-            "label": "Build All - Debug Mode",
+            "label": "build --debug --all --opengl",
             "type": "shell",
-            "windows": {
-                "command": "build Debug",
-            },
+            "windows": { "command": "build --debug --all --opengl"},
             "group": "build",
         },
         {
-            "label": "Build Engine - Debug Mode",
+            "label": "build --release --all --opengl",
             "type": "shell",
-            "windows": {
-                "command": "build Debug Engine",
-            },
-            "group": "build"
+            "windows": { "command": "build --release --all --opengl"},
+            "group": "build",
         },
         {
-            "label": "Build Renderer - Debug Mode",
+            "label": "build --debug --engine --opengl",
             "type": "shell",
-            "windows": {
-                "command": "build Debug Renderer",
-            },
-            "group": "build"
+            "windows": { "command": "build --debug --engine --opengl"},
+            "group": "build",
         },
         {
-            "label": "Build All - Release Mode",
+            "label": "build --release --engine --opengl",
             "type": "shell",
-            "windows": {
-                "command": "build Release",
-            },
-            "group": "build"
+            "windows": { "command": "build --release --engine --opengl"},
+            "group": "build",
+        },
+        {
+            "label": "build --debug --renderer --opengl",
+            "type": "shell",
+            "windows": { "command": "build --debug --renderer --opengl"},
+            "group": "build",
+        },
+        {
+            "label": "build --release --renderer --opengl",
+            "type": "shell",
+            "windows": { "command": "build --release --renderer --opengl"},
+            "group": "build",
+        },
+        {
+            "label": "build --debug --all --vulkan",
+            "type": "shell",
+            "windows": { "command": "build --debug --all --vulkan"},
+            "group": "build",
+        },
+        {
+            "label": "build --release --all --vulkan",
+            "type": "shell",
+            "windows": { "command": "build --release --all --vulkan"},
+            "group": "build",
+        },
+        {
+            "label": "build --debug --engine --vulkan",
+            "type": "shell",
+            "windows": { "command": "build --debug --engine --vulkan"},
+            "group": "build",
+        },
+        {
+            "label": "build --release --engine --vulkan",
+            "type": "shell",
+            "windows": { "command": "build --release --engine --vulkan"},
+            "group": "build",
+        },
+        {
+            "label": "build --debug --renderer --vulkan",
+            "type": "shell",
+            "windows": { "command": "build --debug --renderer --vulkan"},
+            "group": "build",
+        },
+        {
+            "label": "build --release --renderer --vulkan",
+            "type": "shell",
+            "windows": { "command": "build --release --renderer --vulkan"},
+            "group": "build",
         },
         {
             "label": "Build Shaders",

@@ -13,9 +13,10 @@ namespace HY3D
 
 	struct application_config
 	{
-		i32 width;
-		i32 height;
-		const char* name;
+		i32          width;
+		i32          height;
+		const char*  name;
+		renderer_graphics_api renderer;
 	};
 
 	namespace Application
@@ -29,9 +30,9 @@ namespace HY3D
 			i32 height;
 			platform_state platformState;
 		} state;
-	}
 
-	bool ApplicationInitialize(application_config* appInfo);
-	bool ApplicationRun();
+		bool ApplicationInitialize(application_config* appInfo);
+		bool ApplicationRun();
+	}
 }
 #endif // INCLUDE_APPLICATION_H

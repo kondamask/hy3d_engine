@@ -94,7 +94,7 @@ namespace HY3D
 
 	namespace Input
 	{
-		global_var char *buttonStr[] = {
+		global_var const char *buttonStr[] = {
 			"INPUT_BUTTON_UNSUPPORTED",
 			"MOUSE_BUTTON_LEFT",
 			"MOUSE_BUTTON_RIGHT",

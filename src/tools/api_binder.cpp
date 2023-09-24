@@ -168,22 +168,19 @@ int main(int argc, char* argv[])
 	
 	if (argc != 4)
 	{
-		std::cout << argc;
 		std::cout << "Argumments missing. Usage: api_binder <cpp file> <api name> <out dir>\n";
 		result = 1;
 	}
 	else
 	{
 		std::cout << "Parsing " << argv[1] << std::endl;
-		std::cout << "Creating " << argv[2] << " in Directory " << argv[3] << std::endl;
+		std::cout << "Creating " << argv[2] << " in " << argv[3] << std::endl;
 
 		if (!GenerateFunctionBindings(argv[1], argv[2], argv[3]))
 		{
 			result = 2;
 		}
 	}
-
-	std::cout << "------------------------------------------------" << std::endl;
 
 	return result;
 }

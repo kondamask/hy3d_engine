@@ -11,11 +11,11 @@
 
 namespace HY3D
 {
-	enum RENDERER_API
+	enum renderer_graphics_api
 	{
-		RENDERER_API_VULKAN,
-		RENDERER_API_OPENGL,
-		RENDERER_API_DIRECTX,
+		RENDERER_GRAPHICS_API_VULKAN,
+		RENDERER_GRAPHICS_API_OPENGL,
+		RENDERER_GRAPHICS_API_DIRECTX,
 	};
 
 	struct render_packet
@@ -31,6 +31,7 @@ namespace HY3D
 		dynamic_library library;
 		renderer_api    api;
 		void*           apiContext;
+		renderer_graphics_api graphics_api;
 		file_write_time shadersWriteTime;
 	};
 

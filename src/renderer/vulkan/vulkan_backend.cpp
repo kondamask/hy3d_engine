@@ -50,7 +50,7 @@ namespace HY3D
 
 			// TODO:  Fix this once there are instance layers needed for release
 #if _DEBUG
-			char* instanceLayers[] = {
+			const char* instanceLayers[] = {
 				"VK_LAYER_KHRONOS_validation"
 			};
 
@@ -64,7 +64,7 @@ namespace HY3D
 
 			LOG_DEBUG("Required Instance Layers:");
 
-			for (char* desiredInstanceLayer : instanceLayers)
+			for (const char* desiredInstanceLayer : instanceLayers)
 			{
 				LOG_DEBUG("    %s", desiredInstanceLayer);
 				bool found = false;
@@ -82,7 +82,7 @@ namespace HY3D
 			}
 #endif
 
-			char* extensions[] = {
+			const char* extensions[] = {
 		#if _DEBUG
 				VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 		#endif
@@ -107,7 +107,7 @@ namespace HY3D
 			VkSuccessOrReturnFalse(vkEnumerateInstanceExtensionProperties(0, &availableExtensionsCount, availableInstanceExtensions));
 
 			LOG_DEBUG("Required Instance Extensions:");
-			for (char* desiredInstanceExtension : extensions)
+			for (const char* desiredInstanceExtension : extensions)
 			{
 				LOG_DEBUG("    %s", desiredInstanceExtension);
 				bool found = false;
@@ -395,7 +395,7 @@ namespace HY3D
 			queueInfo.queueCount = 1;
 			queueInfo.pQueuePriorities = &queuePriority;
 
-			char* desiredDeviceExtensions[] = {
+			const char* desiredDeviceExtensions[] = {
 				VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 				VK_KHR_MAINTENANCE3_EXTENSION_NAME,
 				VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME };
@@ -407,7 +407,7 @@ namespace HY3D
 			VkSuccessOrReturnFalse(vkEnumerateDeviceExtensionProperties(context->gpu, 0, &deviceExtensionsCount, availableDeviceExtensions));
 
 			LOG_DEBUG("Required Device Extensions:");
-			for (char* desiredDeviceExtension : desiredDeviceExtensions)
+			for (const char* desiredDeviceExtension : desiredDeviceExtensions)
 			{
 				LOG_DEBUG("    %s", desiredDeviceExtension);
 				bool found = false;
@@ -868,8 +868,10 @@ namespace HY3D
 			cmd_resources* result = &context->cmdResources[context->currentCmdResource];
 			context->currentCmdResource = (context->currentCmdResource + 1) % NUM_RESOURCES;
 
-			VkSuccessOrReturnFalse(vkWaitForFences(context->device, 1, &result->fence, true, UINT64_MAX));
-			VkSuccessOrReturnFalse(vkResetFences(context->device, 1, &result->fence));
+			if (!VkSuccess(vkWaitForFences(context->device, 1, &result->fence, true, UINT64_MAX)))
+				return 0;
+			if (!VkSuccess(vkResetFences(context->device, 1, &result->fence)))
+				return 0;
 
 			return result;
 		}

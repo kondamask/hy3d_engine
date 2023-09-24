@@ -298,6 +298,12 @@ namespace HY3D
 		return state->name;
 	}
 
+	bool PlatformSetWindowTitle(platform_state* platformState, const char *title)
+	{
+		Win32::state* state = (Win32::state*)platformState->data;
+		return SetWindowTextA(state->handle, title);
+	}
+
 	LRESULT CALLBACK Win32PlatformProcessMessages(HWND handle, UINT message, WPARAM wParam, LPARAM lParam);
 
 	bool PlatformInitialize(platform_state* platformState, const char* appName, i32 width, i32 height)
@@ -798,9 +804,10 @@ namespace HY3D
 	}
 
 	bool PlatformLoadSystemLibrary(const char* filepath, dynamic_library* libOut)
-	{		
-		PlatformUnloadLibrary(libOut);
-
+	{
+		if (libOut->data)
+			return true;
+			
 		strcpy(libOut->name, filepath);
 		libOut->data = new win32_dll;
 		win32_dll* dll = (win32_dll*)libOut->data;
@@ -828,6 +835,7 @@ namespace HY3D
 			if (lib->writeTime.data)
 				free(lib->writeTime.data);
 			delete dll;
+			LOG_DEBUG("Unloaded '%s'", lib->name);
 			return true;
 		}
 		return false;

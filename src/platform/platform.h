@@ -14,6 +14,7 @@ namespace HY3D
 	};
 
 	const char* PlatformGetAppName(platform_state *platformState);
+	bool PlatformSetWindowTitle(platform_state* platformState, const char *title);
 
 	bool PlatformInitialize(platform_state* platformState, const char* appName, i32 width, i32 height);
 	bool PlatformTerminate(platform_state* platformState);

@@ -44,7 +44,7 @@ namespace HY3D
 			ASSERT(result == true);
 
 			result = CreateSwapchain();
-			ASSERT(result == true);
+			// ASSERT(result == true);
 
 			result = CreateGraphicsPipeline();
 			ASSERT(result == true);
@@ -59,7 +59,8 @@ namespace HY3D
 		{
 			if (!BIT_GET(context->flags, VULKAN_FLAGS::CANRENDER))
 			{
-				CreateSwapchain();
+				bool result = CreateSwapchain();
+				ASSERT(result);
 				return;
 			}
 			
@@ -161,9 +162,19 @@ namespace HY3D
 			return;
 		}
 
-		extern "C" HY3D_API void RendererTerminate()
+		extern "C" HY3D_API void RendererTerminate(void** apiContext)
 		{
-			// PlatformUnloadLibrary(&context->library); // TODO: This causes an assertion when deleting the vulkan dll
+			// TODO: Destroy Everything
+			// DestroyPipeline();
+			// DestroySwapchainImages();
+			// DestroyRenderPass();
+			// DestroyFramebuffers();
+
+			if (*apiContext)
+			{
+				delete *apiContext;
+				*apiContext = 0;
+			}
 			LOG_INFO(__FUNCTION__);
 		}
 

@@ -4,10 +4,14 @@ using namespace HY3D;
 
 static_func int Start()
 {
-	application_config config = {640, 480, "HY3D Engine"};
-	if (ApplicationInitialize(&config))
+	application_config config = {
+		.width    = 640,
+		.height   = 480,
+		.name     = "HY3D Engine",
+		.renderer = RENDERER_GRAPHICS_API_VULKAN};
+	if (Application::ApplicationInitialize(&config))
 	{
-		ApplicationRun();
+		Application::ApplicationRun();
 	}
 	return 0;
 }
