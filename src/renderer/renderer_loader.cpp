@@ -4,21 +4,7 @@
 namespace HY3D
 {
 
-	RendererInitializeSignature(RendererInitializeStub)
-	{
-		LOG_DEBUG("Called Stub Function '%s'", __FUNCTION__);
-		return false;
-	}
-
-	RendererDrawFrameSignature(RendererDrawFrameStub)
-	{
-		LOG_DEBUG("Called Stub Function '%s'", __FUNCTION__);
-	}
-
-	RendererTerminateSignature(RendererTerminateStub)
-	{
-		LOG_DEBUG("Called Stub Function '%s'", __FUNCTION__);
-	}
+#include "renderer_api_auto.cpp"
 
 #define VULKAN_RENDERER_DLL "vulkan_renderer.dll"
 #if _DEBUG
@@ -37,38 +23,12 @@ namespace HY3D
 		case RENDERER_API_DIRECTX: break;
 		}
 
-		pfnRendererSetApiContext RendererSetApiContext = 0;
-		pfnRendererOnReload RendererOnReload = 0;
-
 		if (loadedDLL)
-		{
-			renderer->Initialize =
-				(pfnRendererInitialize)PlatformGetLibraryFunction(&renderer->library, "RendererInitialize");
+			renderer->api = renderer_api_get(renderer->library);
+		else
+			renderer->api = renderer_api_get_stubs();
 
-			renderer->DrawFrame =
-				(pfnRendererDrawFrame)PlatformGetLibraryFunction(&renderer->library, "RendererDrawFrame");
-
-			renderer->Terminate =
-				(pfnRendererTerminate)PlatformGetLibraryFunction(&renderer->library, "RendererTerminate");
-
-			RendererSetApiContext =
-				(pfnRendererSetApiContext)PlatformGetLibraryFunction(&renderer->library, "RendererSetApiContext");
-
-			RendererOnReload =
-				(pfnRendererOnReload)PlatformGetLibraryFunction(&renderer->library, "RendererOnReload");
-		}
-
-		if (!renderer->Initialize)
-			renderer->Initialize = RendererInitializeStub;
-		if (!renderer->DrawFrame)
-			renderer->DrawFrame = RendererDrawFrameStub;
-		if (!renderer->Terminate)
-			renderer->Terminate = RendererTerminateStub;
-				
-		if (RendererSetApiContext)
-			RendererSetApiContext(&renderer->apiContext);
-
-		if (RendererOnReload)
-			RendererOnReload();
+		renderer->api.RendererSetApiContext(&renderer->apiContext);
+		renderer->api.RendererOnReload();
 	}
 } // namespace HY3D

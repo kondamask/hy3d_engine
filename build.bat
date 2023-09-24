@@ -47,19 +47,26 @@ SET OBJs=all.obj
 SET CommonCompilerOptions=%CompilerFlags% %Defines% %Includes% %Warnings%
 SET CommonLinkerOptions=%LinkerFlags% %LIBs% %OBJs%
 
+REM Build Tools
+cl %CommonCompilerOptions% %SRC%\tools\api_binder.cpp -link %LinkerFlags%
+
 @REM Build Targets ----------------------------------------------------------------------
 
 IF [%2] == [] (
+	api_binder.exe %SRC%\engine\engine.cpp engine_api %SRC%\engine
+	api_binder.exe %SRC%\renderer\vulkan\vulkan_renderer.cpp renderer_api %SRC%\renderer
 	ECHO Building All...
 	SET BUILD_SINGLE=0
 	GOTO :BUILD_ALL
 )
 IF %2 == Engine (
+	api_binder.exe %SRC%\engine\engine.cpp engine_api %SRC%\engine
 	ECHO Building Engine...
 	SET BUILD_SINGLE=1
 	GOTO :BUILD_ENGINE
 )
 IF %2 == Renderer (
+	api_binder.exe %SRC%\renderer\vulkan\vulkan_renderer.cpp renderer_api %SRC%\renderer
 	ECHO Building Renderer...
 	SET BUILD_SINGLE=1
 	GOTO :BUILD_RENDERER

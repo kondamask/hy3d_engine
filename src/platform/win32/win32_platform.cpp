@@ -737,7 +737,7 @@ namespace HY3D
 	}
 
 	bool PlatformLoadLibrary(const char* filepath, dynamic_library* libOut)
-	{
+	{		
 		PlatformUnloadLibrary(libOut);
 
 		strcpy(libOut->name, filepath);
@@ -791,7 +791,7 @@ namespace HY3D
 	}
 
 	bool PlatformLoadSystemLibrary(const char* filepath, dynamic_library* libOut)
-	{
+	{		
 		PlatformUnloadLibrary(libOut);
 
 		strcpy(libOut->name, filepath);
@@ -810,6 +810,8 @@ namespace HY3D
 
 	bool PlatformUnloadLibrary(dynamic_library* lib)
 	{
+		ASSERT(lib);
+
 		if (!lib->data) return true;
 
 		win32_dll* dll = (win32_dll*)lib->data;
@@ -826,6 +828,8 @@ namespace HY3D
 
 	void* PlatformGetLibraryFunction(dynamic_library* lib, const char* function)
 	{
+		ASSERT(lib);
+		
 		void* result = 0;
 		if (lib->data)
 		{
@@ -842,13 +846,15 @@ namespace HY3D
 
 	bool PlatformUpdatedDynamicLibrary(dynamic_library* lib)
 	{
+		ASSERT(lib);
+		
 		bool result = false;
 		file_write_time newWriteTime;
 		PlatformGetFileWriteTime(lib->name, &newWriteTime);
 
 		FILETIME* oldFILETIME = (FILETIME*)lib->writeTime.data;
 		FILETIME* newFILETIME = (FILETIME*)newWriteTime.data;
-		if (CompareFileTime(newFILETIME, oldFILETIME) == 1)
+		if (oldFILETIME && CompareFileTime(newFILETIME, oldFILETIME) == 1)
 		{
 			oldFILETIME->dwLowDateTime = newFILETIME->dwLowDateTime;
 			oldFILETIME->dwHighDateTime = newFILETIME->dwHighDateTime;

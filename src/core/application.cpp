@@ -20,8 +20,8 @@ namespace HY3D
 		EngineLoadCode(&Application::state.engine);
 		RendererLoadCode(&Application::state.renderer, RENDERER_API_VULKAN);
 
-		Application::state.engine.Initialize();
-		Application::state.renderer.Initialize(&Application::state.platformState);
+		Application::state.engine.api.EngineInitialize();
+		Application::state.renderer.api.RendererInitialize(&Application::state.platformState);
 
 		return true;
 	}
@@ -42,12 +42,12 @@ namespace HY3D
 
 			if (!Application::state.isSuspended)
 			{
-				Application::state.engine.Update(frameDt);
-				Application::state.engine.Render(frameDt);
+				Application::state.engine.api.EngineUpdate(frameDt);
+				Application::state.engine.api.EngineRender(frameDt);
 
 				render_packet packet;
 				packet.dt = frameDt;
-				Application::state.renderer.DrawFrame(&packet);
+				Application::state.renderer.api.RendererDrawFrame(&packet);
 
 				frameEnd = PlatformGetTime();
 				frameDt = frameEnd - frameStart;
@@ -62,8 +62,8 @@ namespace HY3D
 			}
 		}
 
-		Application::state.renderer.Terminate();
-		Application::state.engine.Terminate();
+		Application::state.renderer.api.RendererTerminate();
+		Application::state.engine.api.EngineTerminate();
 		PlatformTerminate(&Application::state.platformState);
 
 		return true;

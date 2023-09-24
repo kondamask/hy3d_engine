@@ -18,6 +18,22 @@
             }
         },
         {
+            "name": "Run Function Loader - Debug",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "console": "newExternalWindow",
+            "program": "${workspaceFolder}/bin/Debug/hy3d_engine.exe",
+            "requireExactSource": true,
+            "windows": {
+                "name": "Run - Debug",
+                "type": "cppvsdbg",
+                "request": "launch",
+                "cwd": "${workspaceRoot}",
+                "program": "${workspaceFolder}/bin/Debug/function_loader.exe",
+            }
+        },
+        {
             "name": "Run - Release",
             "type": "cppvsdbg",
             "request": "launch",
@@ -32,6 +48,12 @@
                 "cwd": "${workspaceRoot}",
                 "program": "${workspaceFolder}/bin/Release/hy3d_engine.exe",
             }
-        }
+        },
+        {
+            "name": "(Windows) Attach",
+            "type": "cppvsdbg",
+            "request": "attach",
+            "processId": "${command:pickProcess}"
+        },
     ]
 }

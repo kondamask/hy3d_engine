@@ -8,15 +8,13 @@ PUSHD %OutputPath%
 
 SET SRC=..\..\assets\shaders
 
-del *.spv
+SET ARGS=--target-env=vulkan1.2 -O -o %%~nxi.spv
 
-for /r %%i in (%SRC%\*.vert) do (
+IF EXIST *.spv DEL *.spv
+
+for /r %%i in (%SRC%\*.*) do (
 	echo %%~nxi
-	%VULKAN_SDK%/bin/glslc %%i -fshader-stage=vertex -o %%~ni.vert.spv
-)
-for /r %%i in (%SRC%\*.frag) do (
-	echo %%~nxi	
-	%VULKAN_SDK%/bin/glslc %%i -fshader-stage=fragment -o %%~ni.frag.spv
+	%VULKAN_SDK%/bin/glslc %%i %ARGS%
 )
 
 popd

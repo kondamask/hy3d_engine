@@ -3,26 +3,7 @@
 
 namespace HY3D
 {
-	EngineInitializeSignature(EngineInitializeSTUB)
-	{
-		LOG_DEBUG("Called Stub Function '%s'", __FUNCTION__);
-		return false;
-	}
-
-	EngineUpdateSignature(EngineUpdateSTUB)
-	{
-		LOG_DEBUG("Called Stub Function '%s'", __FUNCTION__);
-	}
-
-	EngineRenderSignature(EngineRenderSTUB)
-	{
-		LOG_DEBUG("Called Stub Function '%s'", __FUNCTION__);
-	}
-
-	EngineTerminateSignature(EngineTerminateSTUB)
-	{
-		LOG_DEBUG("Called Stub Function '%s'", __FUNCTION__);
-	}
+#include "engine_api_auto.cpp"
 
 #if _DEBUG
 #define ENGINE_DLL "bin\\Debug\\engine.dll"
@@ -32,27 +13,8 @@ namespace HY3D
 	void EngineLoadCode(engine *engine)
 	{
 		if (PlatformLoadLibrary(ENGINE_DLL, &engine->library))
-		{
-			engine->Initialize =
-				(pfnEngineInitialize)PlatformGetLibraryFunction(&engine->library, "EngineInitialize");
-
-			engine->Update =
-				(pfnEngineUpdate)PlatformGetLibraryFunction(&engine->library, "EngineUpdate");
-
-			engine->Render =
-				(pfnEngineRender)PlatformGetLibraryFunction(&engine->library, "EngineRender");
-
-			engine->Terminate =
-				(pfnEngineTerminate)PlatformGetLibraryFunction(&engine->library, "EngineTerminate");
-		}
-
-		if (!engine->Initialize)
-			engine->Initialize = EngineInitializeSTUB;
-		if (!engine->Update)
-			engine->Update = EngineUpdateSTUB;
-		if (!engine->Render)
-			engine->Render = EngineRenderSTUB;
-		if (!engine->Terminate)
-			engine->Terminate = EngineTerminateSTUB;
+			engine->api = engine_api_get(engine->library);
+		else
+			engine->api = engine_api_get_stubs();
 	}
 }

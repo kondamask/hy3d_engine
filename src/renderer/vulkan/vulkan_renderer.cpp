@@ -11,7 +11,7 @@ namespace HY3D
 {
 	namespace Vulkan
 	{
-		extern "C" HY3D_API RendererInitializeSignature(RendererInitialize)
+		extern "C" HY3D_API bool RendererInitialize(platform_state *platformState)
 		{
 			bool result = PlatformLoadSystemLibrary(VULKAN_DLL, &context->library);
 			ASSERT(result == true);
@@ -55,7 +55,7 @@ namespace HY3D
 			return true;
 		}
 
-		extern "C" HY3D_API RendererDrawFrameSignature(RendererDrawFrame)
+		extern "C" HY3D_API void RendererDrawFrame(render_packet *packet)
 		{
 			cmd_resources* res = GetNextAvailableCommandResource();
 
@@ -84,7 +84,7 @@ namespace HY3D
 			// NOTE: THE ORDER OF THESE VALUES MUST BE IDENTICAL
 			// TO THE ORDER WE SPECIFIED THE RENDERPASS ATTACHMENTS
 			local_var VkClearValue clearValues[] = {
-				{1.0, 0.0, 0.0, 1.0}
+				{0.0, 0.2, 0.2, 1.0}
 			};
 
 			local_var VkRenderPassBeginInfo renderpassInfo = {VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
@@ -155,13 +155,13 @@ namespace HY3D
 			return;
 		}
 
-		extern "C" HY3D_API RendererTerminateSignature(RendererTerminate)
+		extern "C" HY3D_API void RendererTerminate()
 		{
-			PlatformUnloadLibrary(&context->library);
+			// PlatformUnloadLibrary(&context->library); // TODO: This causes an assertion when deleting the vulkan dll
 			LOG_INFO(__FUNCTION__);
 		}
 
-		extern "C" HY3D_API RendererSetApiContextSignature(RendererSetApiContext)
+		extern "C" HY3D_API void RendererSetApiContext(void** apiContext)
 		{
 			if (!(*apiContext))
 			{
@@ -171,7 +171,7 @@ namespace HY3D
 			context = ((vulkan_context*)*apiContext);
 		}
 
-		extern "C" HY3D_API RendererOnReloadSignature(RendererOnReload)
+		extern "C" HY3D_API void RendererOnReload()
 		{
 			if (!context->isInitialized)
 				return;

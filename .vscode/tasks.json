@@ -40,6 +40,42 @@
             },
             "group": "build"
         },
+        {
+            "label": "Build Current File - Debug Mode",
+            "type": "shell",
+            "windows": {
+                "command": "cl",
+                "args": [
+                    "/I${workspaceFolder}/src",
+                    "-EHsc",
+                    "-FC",
+                    "-fp:except-",
+                    "-fp:fast",
+                    "-Gm-",
+                    "-GS-",
+                    "-nologo",
+                    "-Oi",
+                    "-WL",
+                    "-MTd",
+                    "-Od",
+                    "-Zi",
+                    "-Zo",
+                    "${file}"
+                ],
+                "options": {
+                    "cwd": "${workspaceFolder}/bin/Debug"
+                }
+            },
+            "group": "build"
+        },
+        {
+            "label": "Build Current File - Release Mode",
+            "type": "shell",
+            "windows": {
+                "command": "build_file.bat Release ${file}",
+            },
+            "group": "build"
+        },
     ],
     "version": "2.0.0",
     "problemMatcher": [
@@ -54,4 +90,7 @@
         "clear": true,
         "group": "BuildGroup"
     },
+    "options": {
+        "cwd": "${workspaceFolder}"
+    }
 }

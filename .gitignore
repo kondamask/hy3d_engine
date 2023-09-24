@@ -1,4 +1,5 @@
 bin
 *.ctm
+*_auto.*
 ctime.exe
 hy3d_engine_build_time.ctm
