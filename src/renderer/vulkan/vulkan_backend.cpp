@@ -649,7 +649,7 @@ namespace HY3D
 			VkGoodHandleOrReturnFalse(context->device);
 			vkDeviceWaitIdle(context->device);
 
-			context->canRender = false;
+			BIT_CLEAR(context->flags, VULKAN_FLAGS::CANRENDER);
 
 			// NOTE: Get Surface capabilities
 			{
@@ -678,6 +678,7 @@ namespace HY3D
 				}
 				if ((context->windowExtent.width == 0) || (context->windowExtent.height == 0))
 				{
+					BIT_CLEAR(context->flags, VULKAN_FLAGS::CANRENDER);
 					return true;
 				}
 
@@ -819,7 +820,10 @@ namespace HY3D
 			if (result)
 				result = CreateFramebuffers();
 
-			context->canRender = result;
+			if (result)
+				BIT_SET(context->flags, VULKAN_FLAGS::CANRENDER);
+			else
+				BIT_CLEAR(context->flags, VULKAN_FLAGS::CANRENDER);
 
 			LOG_INFO(__FUNCTION__);
 
@@ -872,7 +876,18 @@ namespace HY3D
 
 		static_func void DestroyPipeline()
 		{
+			vkDeviceWaitIdle(context->device);
 			
+			if (VkGoodHandle(context->pipeline))
+			{
+				vkDestroyPipeline(context->device, context->pipeline, 0);
+				context->pipeline = 0;
+			}
+			if (VkGoodHandle(context->pipelineLayout))
+			{
+				vkDestroyPipelineLayout(context->device, context->pipelineLayout, 0);
+				context->pipelineLayout = 0;
+			}
 		}
 
 		static_func bool CreateGraphicsPipeline()
@@ -960,9 +975,8 @@ namespace HY3D
 			graphicsPipelineInfo.pDynamicState = &dynamicStatesInfo;
 
 			VkPipelineLayoutCreateInfo pipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-			VkPipelineLayout pipelineLayout;
-			VkSuccessOrReturnFalse(vkCreatePipelineLayout(context->device, &pipelineLayoutInfo, 0, &pipelineLayout));
-			graphicsPipelineInfo.layout = pipelineLayout;
+			VkSuccessOrReturnFalse(vkCreatePipelineLayout(context->device, &pipelineLayoutInfo, 0, &context->pipelineLayout));
+			graphicsPipelineInfo.layout = context->pipelineLayout;
 
 			graphicsPipelineInfo.renderPass = context->renderPass;
 

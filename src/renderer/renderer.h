@@ -18,7 +18,6 @@ namespace HY3D
 		RENDERER_API_DIRECTX,
 	};
 
-
 	struct render_packet
 	{
 		f64 dt;
@@ -32,6 +31,7 @@ namespace HY3D
 		dynamic_library library;
 		renderer_api    api;
 		void*           apiContext;
+		file_write_time shadersWriteTime;
 	};
 
 } // namespace HY3D

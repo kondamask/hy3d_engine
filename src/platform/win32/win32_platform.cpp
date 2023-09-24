@@ -657,7 +657,7 @@ namespace HY3D
 		char fullFilePath[MAX_PATH] = {};
 		if (GetFullPathNameA(filepath, ArrayCount(fullFilePath), fullFilePath, 0) == 0)
 			return false; // Couldn't find file
-
+		
 		writeTime->data = malloc(sizeof(FILETIME));
 		FILETIME* result = (FILETIME*)writeTime->data;
 		WIN32_FIND_DATA data = {};
@@ -666,28 +666,35 @@ namespace HY3D
 		{
 			*result = data.ftLastWriteTime;
 			FindClose(handle);
+			return true;
 		}
-		return true;
+		else
+		{
+			free(writeTime->data);
+			FindClose(handle);
+			return false;
+		}
 	}
 
 	bool PlatformWasFileUpdated(const char* filepath, file_write_time* writeTime)
 	{
 		if (!writeTime->data)
-		{
 			return false;
-		}
 
-		file_write_time newWriteTime;
-		PlatformGetFileWriteTime(filepath, &newWriteTime);
+		file_write_time newWriteTime = {};
+		if (!PlatformGetFileWriteTime(filepath, &newWriteTime))
+			return false;
 
-		FILETIME* win32newWriteTime = (FILETIME*)writeTime->data;
+		FILETIME* win32newWriteTime = (FILETIME*)newWriteTime.data;
 		FILETIME* win32oldWriteTime = (FILETIME*)writeTime->data;
-		if (CompareFileTime(win32newWriteTime, win32oldWriteTime) == 1)
+		bool result = (CompareFileTime(win32newWriteTime, win32oldWriteTime) == 1);
+
+		if (result)
 		{
-			*win32oldWriteTime = *win32newWriteTime;
-			return true;
+			free(writeTime->data);
+			writeTime->data = newWriteTime.data;
 		}
-		return false;
+		return result;
 	}
 
 	void Win32GetWindowDim(HWND handle, u32& width, u32 height)
@@ -846,24 +853,7 @@ namespace HY3D
 
 	bool PlatformUpdatedDynamicLibrary(dynamic_library* lib)
 	{
-		ASSERT(lib);
-		
-		bool result = false;
-		file_write_time newWriteTime;
-		PlatformGetFileWriteTime(lib->name, &newWriteTime);
-
-		FILETIME* oldFILETIME = (FILETIME*)lib->writeTime.data;
-		FILETIME* newFILETIME = (FILETIME*)newWriteTime.data;
-		if (oldFILETIME && CompareFileTime(newFILETIME, oldFILETIME) == 1)
-		{
-			oldFILETIME->dwLowDateTime = newFILETIME->dwLowDateTime;
-			oldFILETIME->dwHighDateTime = newFILETIME->dwHighDateTime;
-			result = true;
-		}
-
-		if (newWriteTime.data)
-			free(newWriteTime.data);
-		return result;
+		return PlatformWasFileUpdated(lib->name, &lib->writeTime);
 	}
 
 	void PlatformCreateVulkanSurface(platform_state* platformState, void* surfaceInfoIn)
